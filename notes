@@ -1,0 +1,21 @@
+avr-gcc -mmcu=atmega328p -c blink.c
+avr-gcc -mmcu=atmega328p -o blink.elf blink.o
+avr-objcopy -j .text -j .data -O ihex blink.elf blink.hex
+sudo avrdude -c gpio -p atmega328p -v -U flash:w:./blink.hex
+
+
+
+avr-gcc -Os -mmcu=atmega328p -c uart_test.c 
+avr-gcc -mmcu=atmega328p -o uart_test.elf uart_test.o
+avr-objcopy -j .text -j .data -O ihex uart_test.elf uart_test.hex
+sudo avrdude -c gpio -p atmega328p -v -U flash:w:./uart_test.hex
+
+
+
+sudo avrdude -c gpio -p atmega328p -v
+
+
+_delay_loop_2(62500);
+        _delay_loop_2(62500);
+        _delay_loop_2(62500);
+        _delay_loop_2(62500);
