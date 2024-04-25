@@ -57,12 +57,12 @@ void serialWrite(uint8_t DataByte)
         UDR0 = DataByte;
 }
 
-void serialWrite(char* DataStr){
+void serialWriteStr(char* DataStr){
         while (( UCSR0A & (1<<UDRE0)) == 0) {}; // Do nothing until UDR is ready
-        while(DataStr != '\0'){
-                serialWrite(*DataByte++);
+        while(*DataStr != '\0'){
+                serialWrite(*DataStr++);
         }
-        serialWrite("\n");
+        serialWrite('\n');
 }
 
 uint8_t USART_ReceivePolling()
@@ -221,7 +221,7 @@ int main() {
         serialWrite('0'+ usr_delay);
         serialWrite('\n');
 
-        serialWrite("this is test string")
+        serialWriteStr("this is test string\0");
 }
 
 }
