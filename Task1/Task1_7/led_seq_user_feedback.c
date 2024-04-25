@@ -65,12 +65,19 @@ void serialWriteStr(char* DataStr){
         serialWrite('\n');
 }
 
-uint8_t USART_ReceivePolling()
+uint8_t serialRead(bool block = true)
 {
-        uint8_t DataByte;
+        uint8_t DataByte = 0;
         //while (( UCSR0A & (1<<RXC0)) == 0) {}; // Do nothing until data have been received
-        while (( UCSR0A & (1<<RXC0)) == 0) {};
-        DataByte = UDR0 ;
+        if(block){
+                while (( UCSR0A & (1<<RXC0)) == 0) {};
+                DataByte = UDR0 ;
+        }
+        else{
+                if(( UCSR0A & (1<<RXC0)) != 0){
+                   DataByte = UDR0 ;     
+                }
+        }
         return DataByte;
 }
 
@@ -215,13 +222,10 @@ int main() {
             if(char_data >= 48 && char_data <= 57){
                 usr_delay = char_data - '0';
         }
-        serialWrite('\n');
-        serialWrite('s');
-        serialWrite('=');
-        serialWrite('0'+ usr_delay);
-        serialWrite('\n');
-
-        serialWriteStr("this is test string\0");
+        char* string;
+        if(0 > asprintf(&string, "LED sequence delay = %d",('0'+usr_delay))) return error;
+        serialWriteStr(string);
+        free(string);
 }
 
 }
