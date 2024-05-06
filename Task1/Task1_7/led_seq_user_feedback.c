@@ -4,6 +4,7 @@
 #include <util/delay.h>
 #include <stdbool.h>
 #include <avr/interrupt.h>
+#include <stdlib.h>
 
 // Defining Necessary macros for USART 
 #define USART_BAUDRATE 9600 // Desired Baud Rate
@@ -65,9 +66,9 @@ void serialWriteStr(char* DataStr){
         serialWrite('\n');
 }
 
-uint8_t serialRead(bool block = true)
+uint8_t serialRead(bool block)
 {
-        uint8_t DataByte = 0;
+        uint8_t DataByte = '\0';
         //while (( UCSR0A & (1<<RXC0)) == 0) {}; // Do nothing until data have been received
         if(block){
                 while (( UCSR0A & (1<<RXC0)) == 0) {};
@@ -76,9 +77,9 @@ uint8_t serialRead(bool block = true)
         else{
                 if(( UCSR0A & (1<<RXC0)) != 0){
                    DataByte = UDR0 ;     
-                }
-        }
-        return DataByte;
+           }
+   }
+   return DataByte;
 }
 
 
@@ -114,73 +115,52 @@ void led_sequence_1(){
         static bool dir = true;
         
         switch(seq){
-        case 0:{
+        case 0:
                 led_control(0,0,0,0,0,0,0,0,0,0);
                 break;
+        case 1:
+                led_control(1,0,0,0,0,0,0,0,0,0);
+                break;
+        case 2:
+                led_control(1,1,0,0,0,0,0,0,0,0);
+                break;
+        case 3:
+                led_control(1,1,1,0,0,0,0,0,0,0);
+                break;
+        case 4:
+                led_control(1,1,1,1,0,0,0,0,0,0);
+                break;
+        case 5:
+                led_control(1,1,1,1,1,0,0,0,0,0);
+                break;
+        case 6:
+                led_control(1,1,1,1,1,1,0,0,0,0);
+                break;
+        case 7:
+                led_control(1,1,1,1,1,1,1,0,0,0);
+                break;
+        case 8:
+                led_control(1,1,1,1,1,1,1,1,0,0);
+                break;
+        case 9:
+                led_control(1,1,1,1,1,1,1,1,1,0);                
+                break;
+        case 10:
+                led_control(1,1,1,1,1,1,1,1,1,1);
+                break;
+        default:
+                break;
         }
-        
-case 1:{
-        led_control(1,0,0,0,0,0,0,0,0,0);
-        break;
-}
 
-case 2:{
-        led_control(1,1,0,0,0,0,0,0,0,0);
-        break;
-}
-
-case 3:{
-        led_control(1,1,1,0,0,0,0,0,0,0);
-        break;
-}
-
-case 4:{
-        led_control(1,1,1,1,0,0,0,0,0,0);
-        break;
-}
-
-case 5:{
-        led_control(1,1,1,1,1,0,0,0,0,0);
-        break;
-}
-
-case 6:{
-        led_control(1,1,1,1,1,1,0,0,0,0);
-        break;
-}
-
-case 7:{
-        led_control(1,1,1,1,1,1,1,0,0,0);
-        break;
-}
-
-case 8:{
-        led_control(1,1,1,1,1,1,1,1,0,0);
-        break;
-}
-
-case 9:{
-        led_control(1,1,1,1,1,1,1,1,1,0);
-        break;
-}
-
-case 10:{
-        led_control(1,1,1,1,1,1,1,1,1,1);
-        break;
-}
-default:break;
-}
-
-
-if (dir)
-{
-        seq++;
-} else {
-        seq --;
-}
-if(seq == 10 || seq == 0){
-        dir = !dir;
-}
+        if (dir)
+        {
+                seq++;
+        } else {
+                seq --;
+        }
+        if(seq == 10 || seq == 0){
+                dir = !dir;
+        }
 }
 
 // timer setup
@@ -217,18 +197,18 @@ int main() {
     settimer();
     USART_Init();
     while (1){
-        if(( UCSR0A & (1<<RXC0)) != 0){
-            char_data = UDR0;
-            if(char_data >= 48 && char_data <= 57){
-                usr_delay = char_data - '0';
+            char_data = serialRead(false);
+            if(char_data != '\0'){
+                if(char_data >= 48 && char_data <= 57){
+                        usr_delay = char_data - '0';
+                }
+                char* string;
+                if(0 > asprintf(&string, "LED sequence delay = %d",('0'+usr_delay))) return error;
+                serialWriteStr(string);
+                free(string);
         }
-        char* string;
-        if(0 > asprintf(&string, "LED sequence delay = %d",('0'+usr_delay))) return error;
-        serialWriteStr(string);
-        free(string);
 }
 
-}
 return 0;
 }
 
