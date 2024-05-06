@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <avr/interrupt.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 // Defining Necessary macros for USART 
 #define USART_BAUDRATE 9600 // Desired Baud Rate
@@ -60,6 +61,7 @@ void serialWrite(uint8_t DataByte)
 
 void serialWriteStr(char* DataStr){
         while (( UCSR0A & (1<<UDRE0)) == 0) {}; // Do nothing until UDR is ready
+        serialWrite('\n');
         while(*DataStr != '\0'){
                 serialWrite(*DataStr++);
         }
@@ -201,11 +203,14 @@ int main() {
             if(char_data != '\0'){
                 if(char_data >= 48 && char_data <= 57){
                         usr_delay = char_data - '0';
+                        char* string = (char*)malloc(40*sizeof(char));
+                        sprintf(string, "LED sequence delay = %d",usr_delay);
+                        serialWriteStr(string);
+                        free(string);
                 }
-                char* string;
-                if(0 > asprintf(&string, "LED sequence delay = %d",('0'+usr_delay))) return error;
-                serialWriteStr(string);
-                free(string);
+                else{
+                        serialWriteStr("Invalid Char Input, Enter a number in range [0-9]");
+                }
         }
 }
 
@@ -218,6 +223,6 @@ ISR(TIMER1_COMPA_vect){
 
         if(time_ct >= usr_delay*5){
                 led_sequence_1();
-                time_ct = 0; 
+                time_ct = 0;
         }
 }
