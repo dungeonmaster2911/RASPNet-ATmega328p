@@ -31,7 +31,7 @@
 // variables for program logic
 
 uint8_t time_ct = 0;
-uint8_t usr_delay = 10;
+uint8_t anim_speed = 9;
 bool B5 = true;
 bool D4 = true;
 uint8_t seq = 0;
@@ -202,9 +202,9 @@ int main() {
             char_data = serialRead(false);
             if(char_data != '\0'){
                 if(char_data >= 48 && char_data <= 57){
-                        usr_delay = char_data - '0';
+                        anim_speed = char_data - '0';
                         char* string = (char*)malloc(40*sizeof(char));
-                        sprintf(string, "LED sequence delay = %d",usr_delay);
+                        sprintf(string, "LED animation speed  = %d",anim_speed);
                         serialWriteStr(string);
                         free(string);
                 }
@@ -220,8 +220,10 @@ return 0;
 
 ISR(TIMER1_COMPA_vect){
         time_ct++;
+        if(anim_speed == 0){
 
-        if(time_ct >= usr_delay*5){
+        }
+        else if(time_ct >= (9-anim_speed)*5){
                 led_sequence_1();
                 time_ct = 0;
         }
