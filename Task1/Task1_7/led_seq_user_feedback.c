@@ -38,7 +38,24 @@ uint8_t seq = 0;
 bool dir = true;
 uint8_t char_data;
 
-// supporting functions for USART
+// SETUP I/O PINS
+
+void ioPinSetup(){
+        // SET PORTB pins for OUTPUT
+        DDRB |= _BV(PORTB0);
+        DDRB |= _BV(PORTB1);
+        DDRB |= _BV(PORTB2);
+        DDRB |= _BV(PORTB3);
+        DDRB |= _BV(PORTB4);
+        DDRB |= _BV(PORTB5);
+        // SET PORTD pins for OUTPUT
+        DDRD |= _BV(PORTD7);
+        DDRD |= _BV(PORTD6);
+        DDRD |= _BV(PORTD5);
+        DDRD |= _BV(PORTD4);
+}
+
+// Supporting functions for USART
 
 void USART_Init()
 {
@@ -78,14 +95,14 @@ uint8_t serialRead(bool block)
         }
         else{
                 if(( UCSR0A & (1<<RXC0)) != 0){
-                   DataByte = UDR0 ;     
-           }
-   }
-   return DataByte;
+                     DataByte = UDR0 ;     
+             }
+     }
+     return DataByte;
 }
 
 
-// supporting functions for led control
+// Supporting functions for led control
 
 void controlBit(volatile uint8_t* reg,uint8_t pin,bool val){
         if(val){
@@ -184,17 +201,7 @@ void settimer(){
 }
 
 int main() {
-    DDRB |= _BV(PORTB0);      // set pin 0 of port B as an output pin
-    DDRB |= _BV(PORTB1); 
-    DDRB |= _BV(PORTB2);
-    DDRB |= _BV(PORTB3);
-    DDRB |= _BV(PORTB4);
-    DDRB |= _BV(PORTB5);
-    
-    DDRD |= _BV(PORTD7);
-    DDRD |= _BV(PORTD6);
-    DDRD |= _BV(PORTD5);
-    DDRD |= _BV(PORTD4);
+    ioPinSetup();    
     sei();
     settimer();
     USART_Init();
