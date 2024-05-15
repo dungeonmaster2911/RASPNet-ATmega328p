@@ -49,34 +49,32 @@ void serialWrite(uint8_t DataByte)
 }
 
 void setTimer(){
+        OCR1A = 62499; // delay of 1 second
 
-    OCR1A = 62499; // delay of 1 second
+        TCCR1B |= (1 << CS02);        // prescalar 256
+        //TCCR1B |= (1 << CS01);
+        //TCCR1B |= (1 << CS00);
 
-    TCCR1B |= (1 << CS02);        // prescalar 256
-    //TCCR1B |= (1 << CS01);
-    //TCCR1B |= (1 << CS00);
+        TCCR1B |= (1 << WGM12);   // turns on CTC mode for timer1
 
-    TCCR1B |= (1 << WGM12);   // turns on CTC mode for timer1
 
-    
 
-    TIMSK1 |= (1 << OCIE1A);  // enable timer compare interrupt
+        TIMSK1 |= (1 << OCIE1A);  // enable timer compare interrupt
 
-    TCNT1 = 0;                // 16 bit register
+        TCNT1 = 0;                // 16 bit register
 }
 
 
-int main()
-{
-	sei();
-	USART_Init();
-    setTimer();
-    
-    while(true){
-    	serialWrite('M');
-    	_delay_ms(3000);
-    }
-	return 0;
+int main(){
+        sei();
+        USART_Init();
+        setTimer();
+
+        while(true){
+           serialWrite('M');
+           _delay_ms(3000);
+        }
+        return 0;
 }
 
 ISR(TIMER1_COMPA_vect){
