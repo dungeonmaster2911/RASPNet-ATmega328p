@@ -70,7 +70,7 @@ int main()
 {
 	sei();
 	USART_Init();
-    settimer();
+    setTimer();
     
     while(true){
     	serialWrite('M');
