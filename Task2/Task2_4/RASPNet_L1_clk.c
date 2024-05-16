@@ -28,6 +28,11 @@
 #define EIGHT_BIT (3<<UCSZ00)
 #define DATA_BIT   EIGHT_BIT  // USART Data Bit Selection
 
+bool clk = false;
+bool pin2 = false;
+bool data[] = {1,1,0,0,1,1,0,0};
+data_idx = 0;
+
 void controlBit(volatile uint8_t* reg,uint8_t pin,bool val){
         if(val){
                 *reg |= _BV(pin);
@@ -46,12 +51,25 @@ void setIOPins(){
         PD5: Data receive -> INPUT
         PB4
     */
+    controlBit(&DDRB,PORTB0,1);
     controlBit(&DDRB,PORTB4,1);
     controlBit(&DDRB,PORTB5,1);
     controlBit(&DDRD,PORTD4,0);
+    //controlBit(&PORTD,PORTD4,0);
     controlBit(&DDRD,PORTD5,0);
+    //controlBit(&PORTD,PORTD5,0);
+    //DDRD = 0x00; 
     //DDRB |= 1<<PORTB4;
     //DDRB |= 1<<PORTB5;
+    
+    /* 
+     * Enable interrupt for Clock receive PD4
+     * PD4->PCINT20
+     * PCINT20->PCMSK2
+     * PCMSK2-> PCICR->PCIE2
+    */
+    controlBit(&PCICR,PCIE2,1);
+    controlBit(&PCMSK2,PCINT20,1);
 }
 
 void USART_Init(){
@@ -71,6 +89,15 @@ void serialWrite(uint8_t DataByte){
     UDR0 = DataByte;
 }
 
+void serialWriteStr(char* DataStr){
+        while (( UCSR0A & (1<<UDRE0)) == 0) {}; // Do nothing until UDR is ready
+        serialWrite('\n');
+        while(*DataStr != '\0'){
+                serialWrite(*DataStr++);
+        }
+        serialWrite('\n');
+}
+
 void setTimer(){
     OCR1A = 62499; // delay of 1 second
     TCCR1B |= (1 << CS02);        // prescalar 256
@@ -83,17 +110,35 @@ void setTimer(){
 
 
 int main(){
+    setIOPins();
     sei();
     USART_Init();
     setTimer();
 
     while(true){
-        serialWrite('M');
-        _delay_ms(3000);
+        //serialWrite('M');
+        //_delay_ms(3000);
     }
     return 0;
 }
 
 ISR(TIMER1_COMPA_vect){
-    serialWrite('I');
+    
+    clk = !clk;
+    //controlBit(&PORTB,PORTB5,clk);
+    controlBit(&PORTB,PORTB5,data[data_idx++]);
+    data_idx%=8;
+    controlBit(&PORTB,PORTB4,clk);
+    serialWrite('T');
+}
+
+ISR(PCINT2_vect){
+    serialWrite('P');
+    pin2 = !pin2;
+    _delay_ms(100);
+    char* string = (char*)malloc(40*sizeof(char));
+    sprintf(string, "PORTD5 %d",bit_is_set(PIND,PIND5));
+    serialWriteStr(string);
+    free(string);
+    controlBit(&PORTB,PORTB0,bit_is_set(PIND,PIND5));
 }
