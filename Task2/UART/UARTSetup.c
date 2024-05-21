@@ -41,3 +41,20 @@ uint8_t serialRead(bool block)
      }
      return DataByte;
 }
+
+char* serialReadStr(){
+    char* string = (char*)malloc(1024*sizeof(char));
+    
+    char char_data = serialRead(true);
+    int idx = 0;
+    
+    while(char_data != 13){
+        *(string + idx) = char_data;
+        char_data = serialRead(true);
+        idx++;
+    }
+    
+    *(string + idx) = '\0';
+    //serialWriteStr(string);
+    return string; 
+}

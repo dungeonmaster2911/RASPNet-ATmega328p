@@ -157,16 +157,19 @@ void createFrame(){
     
     //Copy preamble to frame
     *dll_frame = preamble;
+    
     //Copy CRC to frame
     *(dll_frame+1) = CRC>>24; //Bit[31:24]
     *(dll_frame+2) = CRC>>16; //Bit[23:16]
     *(dll_frame+3) = CRC>>8; //Bit[15:8]
     *(dll_frame+4) = CRC; //Bit[7:0]
+    
     //Copy data size to frame 
     *(dll_frame+5) = data_buf_len;
     memcpy(dll_frame+6,data_buf,data_buf_len);
     dll_frame_created = true;
     serialWriteStr("Frame Created");
+    
     char* string = (char*)malloc(40*sizeof(char));
     sprintf(string, "Data Buff Len=%d  Frame size=%d ",data_buf_len,frame_size);
     serialWriteStr(string);

@@ -38,3 +38,5 @@ void serialWrite(uint8_t DataByte);
 void serialWriteStr(char* DataStr);
 
 uint8_t serialRead(bool block);
+
+char* serialReadStr();

@@ -119,7 +119,7 @@ void sendDllFrame(){
             
         }
         else{
-            serialWriteStr("3333333");
+            //serialWriteStr("3333333");
             // All bytes sent
             free(send_buffer);
             send_buffer = NULL;
@@ -128,7 +128,7 @@ void sendDllFrame(){
     }
     else{
         if(send_buffer != NULL){
-            serialWriteStr("444444");
+            //serialWriteStr("444444");
             // new frame to send
             bytes_sent = 0;
             bits_sent = 0;
@@ -136,7 +136,7 @@ void sendDllFrame(){
             sending = true;
         }
         else{
-            serialWriteStr("5555555");
+            //serialWriteStr("5555555");
             // Nothing to send, force data bit to 0
             controlBit(&PORTB,PORTB5,0);
         }
@@ -155,10 +155,10 @@ void checkPreambleRecv(){
 		preamble_buffer &= ~1;
 	}
 	
-	char* string = (char*)malloc(40*sizeof(char));
-	sprintf(string, "Preamble=%d ",preamble_buffer);
-	serialWriteStr(string);
-	free(string);
+	//char* string = (char*)malloc(40*sizeof(char));
+	//sprintf(string, "Preamble=%d ",preamble_buffer);
+	//serialWriteStr(string);
+	//free(string);
         
             
     if(preamble_buffer==0b01111110){
@@ -186,7 +186,7 @@ void recvDllFrame(){
 			recv_buffer = (uint8_t*)malloc(5*sizeof(uint8_t));
 		}
 		
-		serialWriteStr("Reading data in this part");
+		//serialWriteStr("Reading data in this part");
 		//preamble_recv = false;
 		if(bit_is_set(PIND,PIND5)){
                 *(recv_buffer+bytes_recv) |= 1;
@@ -197,8 +197,8 @@ void recvDllFrame(){
             }
             
             
-            char* string = (char*)malloc(40*sizeof(char));
-            sprintf(string, "bytes_recv= %d  byte_val=%d",bytes_recv,*(recv_buffer+bytes_recv));
+            char* string = (char*)malloc(80*sizeof(char));
+            sprintf(string, "RECV -------------------------------bytes_recv= %d  byte_val=%d",bytes_recv,*(recv_buffer+bytes_recv));
             serialWriteStr(string);
             free(string);
             
@@ -240,6 +240,7 @@ void recvDllFrame(){
                     // Reallocation failed, stop reading frame
                     serialWriteStr("Realloc failed !!");
                     free(recv_buffer);
+                    bytes_recv = 0;
                     preamble_recv = false;
                 }
             }
@@ -250,6 +251,8 @@ void recvDllFrame(){
                 } 
                 free(recv_buffer);
                 recv_buffer = NULL;
+                bytes_recv = 0;
+                read_payload = false;
                 preamble_recv = false;
             }
 	}
