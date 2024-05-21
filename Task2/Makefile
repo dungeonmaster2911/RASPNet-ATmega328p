@@ -24,13 +24,16 @@ f : dependency $(PRG).elf $(PRG).hex flash
 dependency :
 	$(CC) $(CFLAGS) -c $(SRC)/Layer2/DllFrame.c -o DllFrame.o
 	$(CC) $(CFLAGS) -c $(SRC)/UART/UARTSetup.c -o UARTSetup.o
+	$(CC) $(CFLAGS) -c $(SRC)/RASPNetPinConfig.c -o RASPNetPinConfig.o 
+	$(CC) $(CFLAGS) -c $(SRC)/CRC/Custom_CRC32.c -o Custom_CRC32.o
+	$(CC) $(CFLAGS) -c $(SRC)/Timer/TimerConfig.c -o TimerConfig.o 
+	$(CC) $(CFLAGS) -c $(SRC)/Utils/UsrUtils.c -o UsrUtils.o
 
-$(PRG).elf: $(PRG).o RASPNetPinConfig.o UARTSetup.o Utils/UsrUtils.o Timer/TimerConfig.o DllFrame.o
-	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
+$(PRG).elf: $(PRG).o DllFrame.o UARTSetup.o RASPNetPinConfig.o Custom_CRC32.o TimerConfig.o UsrUtils.o
+	$(CC) $(CFLAGS) -o $@ $^ $(LIBS) 
 
 # dependency:
-$(PRG).o: $(PRG).c RASPNetPinConfig.o UARTSetup.o Utils/UsrUtils.o Timer/TimerConfig.o DllFrame.o
-
+$(PRG).o: $(PRG).c
 
 $(PRG).hex: $(PRG).elf
 	$(OBJCOPY) -j .text -j .data -O ihex $< $@

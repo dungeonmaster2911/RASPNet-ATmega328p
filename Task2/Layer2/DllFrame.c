@@ -1,16 +1,19 @@
 #include "DllFrame.h"
 #include "../Utils/UsrUtils.h"
 #include "../UART/UARTSetup.h"
+#include "../CRC/Custom_CRC32.h"
 
 static uint8_t preamble = 0b01111110;
 
-static uint32_t CRC = 0xFFFFFFFF;
+//static uint32_t CRC = 0xFFFFFFFF;
 
 static uint8_t* send_buffer = NULL;
 
 static uint8_t* recv_buffer = NULL;
 
 static bool preamble_recv = false;
+
+
 
 uint8_t* createDllFrame(uint8_t* payload, uint8_t payload_len){
     // Allocate memory for buffer
@@ -26,10 +29,13 @@ uint8_t* createDllFrame(uint8_t* payload, uint8_t payload_len){
     *dll_frame = preamble;
     
     //Copy CRC to frame
+    crc32(dll_frame+1,payload,payload_len);
+    /*
     *(dll_frame+1) = CRC>>24; //Bit[31:24]
     *(dll_frame+2) = CRC>>16; //Bit[23:16]
     *(dll_frame+3) = CRC>>8; //Bit[15:8]
     *(dll_frame+4) = CRC; //Bit[7:0]
+    */
     
     //Copy data size to frame 
     *(dll_frame+5) = payload_len;
@@ -52,9 +58,9 @@ void printFrameToSerial(uint8_t* dll_frame){
     sprintf(string, "PREAMBLE=%d",*dll_frame);
     serialWriteStr(string);
     
-    sprintf(string, "CRC_BY3=%d",*(dll_frame+1));
+    sprintf(string, "CRC=%lx",*((uint32_t*)(dll_frame+1)));
     serialWriteStr(string);
-    
+    /*
     sprintf(string, "CRC_BY2=%d",*(dll_frame+2));
     serialWriteStr(string);
     
@@ -63,7 +69,7 @@ void printFrameToSerial(uint8_t* dll_frame){
     
     sprintf(string, "CRC_BY0=%d",*(dll_frame+4));
     serialWriteStr(string);
-    
+    */
     sprintf(string, "payload_len=%d",*(dll_frame+5));
     serialWriteStr(string);
     
@@ -79,8 +85,8 @@ bool copyFrameToSendBuffer(uint8_t* dll_frame){
 		uint8_t frame_size = *(dll_frame+5)+6;
 		send_buffer = (uint8_t*)malloc(frame_size*sizeof(uint8_t));
 		memcpy(send_buffer,dll_frame,frame_size);
-		serialWriteStr("frame copied to send_buffer");
-		printFrameToSerial(send_buffer);
+		//serialWriteStr("frame copied to send_buffer");
+		//printFrameToSerial(send_buffer);
 		return true;
 	}
 	else{
@@ -198,7 +204,7 @@ void recvDllFrame(){
             
             
             char* string = (char*)malloc(80*sizeof(char));
-            sprintf(string, "RECV -------------------------------bytes_recv= %d  byte_val=%d",bytes_recv,*(recv_buffer+bytes_recv));
+            sprintf(string, "                              RECV -> bytes_recv= %d  bits_recv=%d  byte_val=%d",bytes_recv,bits_recv,*(recv_buffer+bytes_recv));
             serialWriteStr(string);
             free(string);
             
@@ -241,126 +247,36 @@ void recvDllFrame(){
                     serialWriteStr("Realloc failed !!");
                     free(recv_buffer);
                     bytes_recv = 0;
+                    bits_recv = 0;
                     preamble_recv = false;
                 }
             }
             else if(bytes_recv == (*(recv_buffer+4)+5)){
                 serialWriteStr("Receive frame completed");
-                for(int i=0;i<*(recv_buffer+4);i++){
-                    serialWrite(*(recv_buffer+5+i));
-                } 
-                free(recv_buffer);
-                recv_buffer = NULL;
                 bytes_recv = 0;
+                bits_recv= 0;
                 read_payload = false;
                 preamble_recv = false;
+                
+                
+                uint32_t* crc_comp = (uint32_t*)malloc(sizeof(uint32_t));
+                crc32((uint8_t*)crc_comp,recv_buffer+5,*(recv_buffer+4));
+                
+                if(*crc_comp == *((uint32_t*)recv_buffer)){
+					for(int i=0;i<*(recv_buffer+4);i++){
+						serialWrite(*(recv_buffer+5+i));
+					}
+				}
+				else{
+					serialWriteStr("CRC Mismatch Discard frame !!");
+				}
+				
+                free(crc_comp);   
+                free(recv_buffer);
+                recv_buffer = NULL;
+                
             }
 	}
 
 }
 
-
-/*
-void receiveFrame(){
-    static bool preamble = false;
-    static bool recv_data_buff = false;
-    static uint8_t bits_recv=0;
-    static uint8_t bytes_recv=0; 
-    
-    if(!preamble){
-        if(bit_is_set(PIND,PIND5)){
-            recv_preamble |= 1;
-        }
-        else{
-            recv_preamble &= ~1;
-        }
-        
-        char* string = (char*)malloc(40*sizeof(char));
-        sprintf(string, "Preamble=%d ",recv_preamble);
-        serialWriteStr(string);
-        free(string);
-        
-        
-        
-        if(recv_preamble==0b01111110){
-            serialWriteStr("Preamble Match");
-            recv_frame= (uint8_t*)malloc(5*sizeof(uint8_t));
-            *recv_frame = 0;
-            recv_preamble = 0;
-            bits_recv=0;
-            preamble = true;
-            bytes_recv=0; 
-        }
-        else{
-            recv_preamble<<=1;
-        }
-        
-        
-    }
-    else{
-        //if(!recv_data_buff){
-        if(true){
-            if(bit_is_set(PIND,PIND5)){
-                *(recv_frame+bytes_recv) |= 1;
-            
-            }   
-            else{
-                *(recv_frame+bytes_recv) &= ~1;
-            }
-            
-            
-            char* string = (char*)malloc(40*sizeof(char));
-            sprintf(string, "bytes_recv= %d  byte_val=%d",bytes_recv,*(recv_frame+bytes_recv));
-            serialWriteStr(string);
-            free(string);
-            
-            
-            
-            if(bits_recv == 7){
-                bits_recv=0; // reset bit count to 0 after sending 8 bits
-                bytes_recv++;
-                *(recv_frame+bytes_recv) = 0;
-            }
-            else{
-                *(recv_frame+bytes_recv)<<=1;
-                bits_recv++;
-            }
-            if(bytes_recv == 5 && !recv_data_buff){
-                serialWriteStr("RECV UNTILL SIZE");
-                
-                char* string = (char*)malloc(40*sizeof(char));
-                sprintf(string, "CRC_Byte3=%d CRC_Byte2=%d CRC_Byte1=%d CRC_Byte3=%d \nData_Size=%d",*(recv_frame),*(recv_frame+1),*(recv_frame+2),*(recv_frame+3),*(recv_frame+4));
-                serialWriteStr(string);
-                free(string);
-                
-                //free(recv_frame);
-                //bytes_recv = 0;
-                //preamble = false;
-                
-                //Reallocate Memory for recv_frame based on payload size
-                recv_frame_size = 5+*(recv_frame+4);
-                void * tmp = realloc(recv_frame,recv_frame_size*sizeof(uint8_t));
-                if(tmp !=NULL){
-                    recv_frame = tmp;
-                    recv_data_buff = true;
-                }
-                else{
-                    // Reallocation failed, stop reading frame
-                    serialWriteStr("Realloc failed !!");
-                    free(recv_frame);
-                    preamble = false;
-                }
-            }
-            else if(bytes_recv == (*(recv_frame+4)+5)){
-                serialWriteStr("Receive frame completed");
-                for(int i=0;i<*(recv_frame+4);i++){
-                    serialWrite(*(recv_frame+5+i));
-                } 
-                free(recv_frame);
-                preamble = false;
-            }
-        }
-    }    
-}
-
-*/
