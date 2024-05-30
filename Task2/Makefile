@@ -28,8 +28,9 @@ dependency :
 	$(CC) $(CFLAGS) -c $(SRC)/CRC/Custom_CRC32.c -o Custom_CRC32.o
 	$(CC) $(CFLAGS) -c $(SRC)/Timer/TimerConfig.c -o TimerConfig.o 
 	$(CC) $(CFLAGS) -c $(SRC)/Utils/UsrUtils.c -o UsrUtils.o
+	$(CC) $(CFLAGS) -c $(SRC)/Layer3/NetworkFrame.c -o NetworkFrame.o
 
-$(PRG).elf: $(PRG).o DllFrame.o UARTSetup.o RASPNetPinConfig.o Custom_CRC32.o TimerConfig.o UsrUtils.o
+$(PRG).elf: $(PRG).o DllFrame.o UARTSetup.o RASPNetPinConfig.o Custom_CRC32.o TimerConfig.o UsrUtils.o NetworkFrame.o
 	$(CC) $(CFLAGS) -o $@ $^ $(LIBS) 
 
 # dependency:

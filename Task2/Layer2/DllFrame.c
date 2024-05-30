@@ -2,6 +2,7 @@
 #include "../Utils/UsrUtils.h"
 #include "../UART/UARTSetup.h"
 #include "../CRC/Custom_CRC32.h"
+#include "../Layer3/NetworkFrame.h"
 
 static uint8_t preamble = 0b01111110;
 
@@ -10,6 +11,9 @@ static uint8_t preamble = 0b01111110;
 static uint8_t* send_buffer = NULL;
 
 static uint8_t* recv_buffer = NULL;
+
+uint8_t* received_frame = NULL;
+
 
 static bool preamble_recv = false;
 
@@ -42,7 +46,7 @@ uint8_t* createDllFrame(uint8_t* payload, uint8_t payload_len){
     
     //Copy payload to frame 
     memcpy(dll_frame+6,payload,payload_len);
-    printFrameToSerial(dll_frame);
+    printFrameToSerial(dll_frame+1);
     return dll_frame;
 }
 
@@ -55,10 +59,10 @@ void printFrameToSerial(uint8_t* dll_frame){
 	}	
 	char* string = (char*)malloc(40*sizeof(char));
     
-    sprintf(string, "PREAMBLE=%d",*dll_frame);
-    serialWriteStr(string);
+    //sprintf(string, "PREAMBLE=%d",*dll_frame);
+    //serialWriteStr(string);
     
-    sprintf(string, "CRC=%lx",*((uint32_t*)(dll_frame+1)));
+    sprintf(string, "CRC=%lx",*((uint32_t*)(dll_frame)));
     serialWriteStr(string);
     /*
     sprintf(string, "CRC_BY2=%d",*(dll_frame+2));
@@ -70,11 +74,11 @@ void printFrameToSerial(uint8_t* dll_frame){
     sprintf(string, "CRC_BY0=%d",*(dll_frame+4));
     serialWriteStr(string);
     */
-    sprintf(string, "payload_len=%d",*(dll_frame+5));
+    sprintf(string, "payload_len=%d",*(dll_frame+4));
     serialWriteStr(string);
     
-    for(int i=0;i<*(dll_frame+5);i++){
-		sprintf(string, "Data_BY_%d=%c",*(dll_frame+5)-i,*(dll_frame+6+i));
+    for(int i=0;i<*(dll_frame+4);i++){
+		sprintf(string, "Data_BY_%d  CHAR = %c INT = %d",*(dll_frame+4)-i,*(dll_frame+5+i),*(dll_frame+5+i));
 		serialWriteStr(string);
 	}    
     free(string);
@@ -204,7 +208,7 @@ void recvDllFrame(){
             
             
             char* string = (char*)malloc(80*sizeof(char));
-            sprintf(string, "                              RECV -> bytes_recv= %d  bits_recv=%d  byte_val=%d",bytes_recv,bits_recv,*(recv_buffer+bytes_recv));
+            sprintf(string, "                              RECV -> bytes_recv= %d  bits_recv=%d  byte_val=%d\nData_Size=%d",bytes_recv,bits_recv,*(recv_buffer+bytes_recv),*(recv_buffer+4)+5);
             serialWriteStr(string);
             free(string);
             
@@ -226,8 +230,9 @@ void recvDllFrame(){
             if(bytes_recv == 5 && !read_payload){
                 serialWriteStr("RECV UNTILL SIZE");
                 
-                char* string = (char*)malloc(40*sizeof(char));
-                sprintf(string, "CRC_Byte3=%d CRC_Byte2=%d CRC_Byte1=%d CRC_Byte3=%d \nData_Size=%d",*(recv_buffer),*(recv_buffer+1),*(recv_buffer+2),*(recv_buffer+3),*(recv_buffer+4));
+                char* string = (char*)malloc(80*sizeof(char));
+                //sprintf(string, "CRC_Byte3=%d CRC_Byte2=%d CRC_Byte1=%d CRC_Byte3=%d \nData_Size=%d",*(recv_buffer),*(recv_buffer+1),*(recv_buffer+2),*(recv_buffer+3),*(recv_buffer+4));
+                sprintf(string, "#######CRC=%lx  \nData_Size=%d#########",*((uint32_t*)(recv_buffer)),*(recv_buffer+4));
                 serialWriteStr(string);
                 free(string);
                 
@@ -251,19 +256,29 @@ void recvDllFrame(){
                     preamble_recv = false;
                 }
             }
-            else if(bytes_recv == (*(recv_buffer+4)+5)){
+            else if(bytes_recv >= (*(recv_buffer+4)+5)){
                 serialWriteStr("Receive frame completed");
                 bytes_recv = 0;
                 bits_recv= 0;
                 read_payload = false;
                 preamble_recv = false;
                 
-                
+                /*
                 uint32_t* crc_comp = (uint32_t*)malloc(sizeof(uint32_t));
                 crc32((uint8_t*)crc_comp,recv_buffer+5,*(recv_buffer+4));
+				
+				char* string = (char*)malloc(40*sizeof(char));
+				sprintf(string, "DEST ADDR=%d  SRC ADDR=%d",*(destAddr(recv_buffer)),*(srcAddr(recv_buffer)));
+				serialWriteStr(string);
+				free(string);
+ 
                 if(*crc_comp == *((uint32_t*)recv_buffer)){
 					for(int i=0;i<*(recv_buffer+4);i++){
-						serialWrite(*(recv_buffer+5+i));
+						char* string = (char*)malloc(40*sizeof(char));
+						sprintf(string, "PAYLOAD_BYTE_%d = %c",i,*(recv_buffer+5+i));
+						serialWriteStr(string);
+						free(string);
+						//serialWrite(*(recv_buffer+5+i));
 					}
 					serialWrite('\n');
 				}
@@ -272,10 +287,42 @@ void recvDllFrame(){
 				}
 				
                 free(crc_comp);   
+                */
+                
+                printFrameToSerial(recv_buffer);
+                
+                if(received_frame != NULL){
+					free(received_frame);
+					received_frame = NULL;
+				}
+				
+				
+				received_frame = (uint8_t*)malloc(frameSize(recv_buffer)*sizeof(uint8_t));
+                memcpy(received_frame,recv_buffer,frameSize(recv_buffer));
+                printFrameToSerial(received_frame);
+                
+                
                 free(recv_buffer);
                 recv_buffer = NULL;
             }
 	}
 
+}
+
+
+uint8_t frameSize(uint8_t* frame){
+	
+	if((frame+4) != NULL){
+		return 5+*(frame+4);
+	}
+	else{
+		return 0;
+	}
+}
+
+
+
+uint8_t* getRecvFrame(){
+	return received_frame;
 }
 

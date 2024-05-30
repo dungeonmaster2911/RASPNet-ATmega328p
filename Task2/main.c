@@ -14,8 +14,18 @@
 #include "UART/UARTSetup.h"
 #include "Timer/TimerConfig.h"
 #include "Layer2/DllFrame.h"
+#include "Layer3/NetworkFrame.h"
+
+
 
 char* payload = "ABCD";
+
+void wtf(){
+	while(true){
+		int a = 66* 67;
+		a++;
+		}
+}
 
 int main(){
 	sei();
@@ -31,12 +41,21 @@ int main(){
 		
 		char* serial_str = serialReadStr();
 		serialWriteStr(serial_str);
-		uint8_t * dll_frame = createDllFrame((uint8_t*)serial_str,strlen(serial_str));
+		uint8_t str_len = strlen(serial_str);
+		
+		
+		uint8_t* network_frame = addNetworkHeaders(123,234,(uint8_t*)serial_str,&str_len);
+		
+		//uint8_t * dll_frame = createDllFrame((uint8_t*)serial_str,strlen(serial_str));
+		uint8_t * dll_frame = createDllFrame(network_frame,str_len);
+		
 		copyFrameToSendBuffer(dll_frame);
 		free(serial_str);
 		free(dll_frame);
-		dll_frame = NULL;
+		free(network_frame);
 		
+		dll_frame = NULL;
+		network_frame = NULL;
 		//printFrameToSerial(dll_frame);
 		//_delay_ms(2000);
 		//_delay_ms(2000);
@@ -53,10 +72,16 @@ int main(){
         serialWriteStr(string);
         free(string);
         */
+        
+        //Try to read a received frame if available
+        //while(true){
+		//}
+        //wtf();
 		
 	}
 	return 0;
 }
+
 
 
 ISR(TIMER1_COMPA_vect){
@@ -64,8 +89,8 @@ ISR(TIMER1_COMPA_vect){
  
     
     //controlBit(&PORTB,PORTB5,!bit_is_set(PINB,PINB5));
-    sendDllFrame();
     
+    sendDllFrame();
     controlBit(&PORTB,PORTB4,!bit_is_set(PINB,PINB4));
     controlBit(&PORTB,PORTB0,bit_is_set(PIND,PIND4));
 }
@@ -74,3 +99,8 @@ ISR(PCINT2_vect){
     //controlBit(&PORTB,PORTB0,bit_is_set(PIND,PIND5));
     recvDllFrame();
 }
+
+
+
+
+
