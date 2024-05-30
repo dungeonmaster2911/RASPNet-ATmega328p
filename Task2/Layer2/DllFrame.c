@@ -42,7 +42,7 @@ uint8_t* createDllFrame(uint8_t* payload, uint8_t payload_len){
     
     //Copy payload to frame 
     memcpy(dll_frame+6,payload,payload_len);
-    
+    printFrameToSerial(dll_frame);
     return dll_frame;
 }
 
@@ -261,11 +261,11 @@ void recvDllFrame(){
                 
                 uint32_t* crc_comp = (uint32_t*)malloc(sizeof(uint32_t));
                 crc32((uint8_t*)crc_comp,recv_buffer+5,*(recv_buffer+4));
-                
                 if(*crc_comp == *((uint32_t*)recv_buffer)){
 					for(int i=0;i<*(recv_buffer+4);i++){
 						serialWrite(*(recv_buffer+5+i));
 					}
+					serialWrite('\n');
 				}
 				else{
 					serialWriteStr("CRC Mismatch Discard frame !!");
@@ -274,7 +274,6 @@ void recvDllFrame(){
                 free(crc_comp);   
                 free(recv_buffer);
                 recv_buffer = NULL;
-                
             }
 	}
 

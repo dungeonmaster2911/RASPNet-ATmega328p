@@ -3,7 +3,7 @@ void crc32(uint8_t* crc, uint8_t* payload, uint8_t payload_len) {
     
     *((uint32_t*)crc) = 0x0; // Initial value
     //uint32_t polynomial = 0xEDB88320; // Reversed polynomial for CRC32
-    uint32_t polynomial = 0x04C11DB7;
+    uint32_t polynomial = 0x04C11DB7; // Forward polynomial for CRC32
 
     for (size_t i = 0; i < payload_len; ++i) {
         uint8_t byte = *(payload+i);

@@ -62,12 +62,15 @@ int main(){
 ISR(TIMER1_COMPA_vect){
     
  
-    controlBit(&PORTB,PORTB4,!bit_is_set(PINB,PINB4));
+    
     //controlBit(&PORTB,PORTB5,!bit_is_set(PINB,PINB5));
     sendDllFrame();
+    
+    controlBit(&PORTB,PORTB4,!bit_is_set(PINB,PINB4));
+    controlBit(&PORTB,PORTB0,bit_is_set(PIND,PIND4));
 }
 
 ISR(PCINT2_vect){
-    controlBit(&PORTB,PORTB0,bit_is_set(PIND,PIND5));
+    //controlBit(&PORTB,PORTB0,bit_is_set(PIND,PIND5));
     recvDllFrame();
 }
