@@ -43,7 +43,7 @@ uint8_t serialRead(bool block)
 }
 
 char* serialReadStr(){
-    char* string = (char*)malloc(1024*sizeof(char));
+    char* string = (char*)malloc(40*sizeof(char));
     
     char char_data = serialRead(true);
     int idx = 0;

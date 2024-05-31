@@ -7,10 +7,6 @@
 
 
 
-uint8_t* addNetworkHeaders(uint8_t dest_addr, uint8_t src_addr, uint8_t* payload, uint8_t* payload_len)  ;
+void addNetworkHeaders(uint8_t dest_addr, uint8_t src_addr, uint8_t* frame)  ;
 
 uint8_t checkDestination(uint8_t* frame) ;
-
-uint8_t* destAddr(uint8_t* frame);
-
-uint8_t* srcAddr(uint8_t* frame);

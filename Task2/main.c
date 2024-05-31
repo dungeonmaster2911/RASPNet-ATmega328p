@@ -15,15 +15,14 @@
 #include "Timer/TimerConfig.h"
 #include "Layer2/DllFrame.h"
 #include "Layer3/NetworkFrame.h"
-
+#include <util/atomic.h>
 
 
 char* payload = "ABCD";
 
-void wtf(){
+void loop(){
 	while(true){
-		int a = 66* 67;
-		a++;
+
 		}
 }
 
@@ -36,14 +35,22 @@ int main(){
 	_delay_ms(2000);
 	while(true){
 		
-		//uint8_t * dll_frame = createDllFrame((uint8_t*)payload,strlen(payload));
-		//copyFrameToSendBuffer(dll_frame);
+		
 		
 		char* serial_str = serialReadStr();
 		serialWriteStr(serial_str);
 		uint8_t str_len = strlen(serial_str);
 		
+		uint8_t* frame = createFrame((uint8_t*)serial_str,str_len);
+		addNetworkHeaders(29,29,frame);
 		
+		printFrame(frame);
+		ATOMIC_BLOCK(ATOMIC_RESTORESTATE){
+			copyFrameToSendBuffer(frame);
+		}
+		free(frame);
+		
+		/*
 		uint8_t* network_frame = addNetworkHeaders(123,234,(uint8_t*)serial_str,&str_len);
 		
 		//uint8_t * dll_frame = createDllFrame((uint8_t*)serial_str,strlen(serial_str));
@@ -56,48 +63,78 @@ int main(){
 		
 		dll_frame = NULL;
 		network_frame = NULL;
-		//printFrameToSerial(dll_frame);
-		//_delay_ms(2000);
-		//_delay_ms(2000);
-		//_delay_ms(2000);
-		
-		//free(dll_frame);
-		//dll_frame = NULL;
-		
-		//printFrameToSerial(dll_frame);
-		
-		/*
-		char* string = (char*)malloc(40*sizeof(char));
-        sprintf(string, "Char=%d",serialRead(true));
-        serialWriteStr(string);
-        free(string);
-        */
-        
-        //Try to read a received frame if available
-        //while(true){
-		//}
-        //wtf();
-		
-	}
+		*/
+		while(true){
+			uint8_t* frame = getRecvFrame();
+			static bool forward = false;
+			 
+			if(frame == NULL){
+				serialWriteStr("NO frame to read");
+			}
+			else{
+				switch(checkDestination(frame)){
+					case 0:serialWriteStr("BROADCAST");
+						forward = false;
+						break;
+					case 1:serialWriteStr("SELF");
+						uint8_t* crc_comp = (uint8_t*)malloc(4*sizeof(uint8_t));						
+						crc32(crc_comp,pPayload(frame),pSize(frame));
+						if(*((uint32_t*)crc_comp) == *pCRC(frame)){
+							printFrame(frame);
+						}
+						else{
+							serialWriteStr("CRC error");
+						}
+						forward = false;
+						break;
+					case 2:serialWriteStr("FORWARD");
+						printFrame(frame);
+						copyFrameToSendBuffer(frame);
+						forward = true;
+						break;
+					default:serialWriteStr("ERROR");
+						break;
+				}
+				free(frame);
+				if(!forward)
+				break;
+			}
+			_delay_ms(2000);
+		}
+    }
 	return 0;
 }
 
 
 
 ISR(TIMER1_COMPA_vect){
+    //Variable to implement phase shift
+    static bool phase = false;
     
- 
+    //basically divides the timer clock by 2
+    if(phase){
+		controlBit(&PORTB,PORTB4,!bit_is_set(PINB,PINB4));
+		controlBit(&PORTB,PORTB0,bit_is_set(PIND,PIND4));
+		
+	}
+	else{
+		sendDllFrame();
+	}
+	
+	phase = !phase;
     
     //controlBit(&PORTB,PORTB5,!bit_is_set(PINB,PINB5));
     
-    sendDllFrame();
-    controlBit(&PORTB,PORTB4,!bit_is_set(PINB,PINB4));
-    controlBit(&PORTB,PORTB0,bit_is_set(PIND,PIND4));
+    //sendDllFrame();
+    //controlBit(&PORTB,PORTB4,!bit_is_set(PINB,PINB4));
+    //controlBit(&PORTB,PORTB0,bit_is_set(PIND,PIND4));
 }
 
 ISR(PCINT2_vect){
     //controlBit(&PORTB,PORTB0,bit_is_set(PIND,PIND5));
-    recvDllFrame();
+    ATOMIC_BLOCK(ATOMIC_RESTORESTATE){
+		recvDllFrame();
+	}
 }
 
 
