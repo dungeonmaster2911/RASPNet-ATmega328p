@@ -27,6 +27,12 @@ static bool block_send = false;
 
 
 void handleRecveivedFrame(){
+	uint8_t* recv_frame = getRecvFrame();
+	if(recv_frame !=NULL){
+		printFrame(recv_frame);
+		free(recv_frame);
+		recv_frame = NULL;
+	}
 }
 
 void checkInput(){
@@ -91,6 +97,7 @@ int main(){
 	while(true){
 		ATOMIC_BLOCK(ATOMIC_RESTORESTATE){
 			checkInput();
+			handleRecveivedFrame();
 		}
 		/*
 		for(int i=0;i<3;i++){
@@ -224,7 +231,9 @@ ISR(TIMER1_COMPA_vect){
 	}
 	else{
 		if(!block_send)
+		ATOMIC_BLOCK(ATOMIC_RESTORESTATE){
 		sendDllFrame();
+		}
 	}
 	
 	phase = !phase;

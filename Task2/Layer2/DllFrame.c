@@ -5,6 +5,8 @@
 #include "../Layer3/NetworkFrame.h"
 #include "../FrameQueue/Frame_Queue.h"
 
+//#define DLL_DEBUG
+
 
 #define PREAMBLE 0
 #define IDENTIFICATION 1
@@ -135,12 +137,15 @@ void sendDllFrame(){
             //serialWriteStr("22222222");
             uint8_t bit = (*(send_buffer+bytes_sent)>>(7-bits_sent)) & 1 ;
             
-            
+            #ifdef DLL_DEBUG
             char* string = (char*)malloc(40*sizeof(char));
             sprintf(string, "Bytes Sent=%d   Bits sent=%d Data=%d",bytes_sent,bits_sent,bit);
             serialWriteStr(string);
             free(string);
-            
+	    #else
+	    //serialWrite('>');
+            #endif
+	    
             controlBit(&PORTB,PORTB5,bit);
             if(bits_sent == 7){
                 bits_sent=0; // reset bit count to 0 after sending 8 bits
@@ -242,12 +247,12 @@ void recvDllFrame(){
                 *(recv_buffer+bytes_recv) &= ~1;
             }
             
-            
+            #ifdef DLL_DEBUG
             char* string = (char*)malloc(80*sizeof(char));
             sprintf(string, "                              RECV -> bytes_recv= %d  bits_recv=%d  byte_val=%d\nData_Size=%d",bytes_recv,bits_recv,*(recv_buffer+bytes_recv),*pSize(recv_buffer));
             serialWriteStr(string);
             free(string);
-            
+            #endif
             
             
             if(bits_recv == 7){
@@ -264,11 +269,11 @@ void recvDllFrame(){
             
             
             if(bytes_recv == 10 && !read_payload){
-                serialWriteStr("RECV UNTILL SIZE");
+                serialWriteStr("RECEIVED UNTILL SIZE");
                 
                 char* string = (char*)malloc(80*sizeof(char));
                 //sprintf(string, "CRC_Byte3=%d CRC_Byte2=%d CRC_Byte1=%d CRC_Byte3=%d \nData_Size=%d",*(recv_buffer),*(recv_buffer+1),*(recv_buffer+2),*(recv_buffer+3),*(recv_buffer+4));
-                sprintf(string, "#########\nCRC=%lx  \nData_Size=%d\n#########",*((uint32_t*)pCRC(recv_buffer)),*pSize(recv_buffer));
+                sprintf(string, "CRC=%lx  \nData_Size=%d",*((uint32_t*)pCRC(recv_buffer)),*pSize(recv_buffer));
                 serialWriteStr(string);
                 free(string);
                 
@@ -292,9 +297,11 @@ void recvDllFrame(){
                     preamble_recv = false;
                 }
             }
-	    else if(bytes_recv == 5){
+	    else if(bytes_recv == 5 && bits_recv == 0){
+		serialWriteStr("RECEIVED UNTILL SRC ADDR");
 		
 		if(checkDestination(recv_buffer)){
+		    serialWriteStr("Forward");
 		    forward = addFrameToQueue(NULL);
 		    add_data_to_forward_frame = true;
 		}
@@ -309,24 +316,26 @@ void recvDllFrame(){
                 read_payload = false;
                 preamble_recv = false;
                 
-                
-		if(add_data_to_forward_frame){
-		    uint8_t* forward_frame = (uint8_t*)malloc(frameSize(recv_buffer)*sizeof(uint8_t));
-		    memcpy(forward_frame,recv_buffer,frameSize(recv_buffer));
-		    add_data_to_forward_frame = false;
-		    serialWriteStr("Added data to forward frame");
-		    forward->frame = forward_frame;
-		    forward = NULL;
-		}
-		else{
-		    if(received_frame != NULL){
-			free(received_frame);
+                //ATOMIC_BLOCK(ATOMIC_RESTORESTATE){
+		    if(add_data_to_forward_frame){
+			uint8_t* forward_frame = (uint8_t*)malloc(frameSize(recv_buffer)*sizeof(uint8_t));
+			memcpy(forward_frame,recv_buffer,frameSize(recv_buffer));
+			add_data_to_forward_frame = false;
+			serialWriteStr("Adding data to forward frame");
+			printFrame(forward_frame);
+			forward->frame = forward_frame;
+			forward = NULL;
 		    }
+		    else{
+			if(received_frame != NULL){
+			    free(received_frame);
+			}
                 
-		    received_frame = (uint8_t*)malloc(frameSize(recv_buffer)*sizeof(uint8_t));
-		    memcpy(received_frame,recv_buffer,frameSize(recv_buffer));
-		    printFrame(received_frame);
-		}
+			received_frame = (uint8_t*)malloc(frameSize(recv_buffer)*sizeof(uint8_t));
+			memcpy(received_frame,recv_buffer,frameSize(recv_buffer));
+			//printFrame(received_frame);
+		    }
+		//}
 		
                 free(recv_buffer);
                 recv_buffer = NULL;
