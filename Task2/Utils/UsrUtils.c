@@ -85,6 +85,10 @@ void printFrame(uint8_t* frame){
                 sprintf(string, "PREAMBLE = %d",*pPreamble(frame));
                 serialWriteStr(string);
         }
+        else{
+                serialWriteStr("NULL FRAME");
+                return;
+        }
         
         if(pIdentification(frame)){
                 sprintf(string, "IDENTIFICATION = %d",*pIdentification(frame));

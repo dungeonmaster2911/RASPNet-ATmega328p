@@ -3,6 +3,7 @@
 #include "../UART/UARTSetup.h"
 #include "../CRC/Custom_CRC32.h"
 #include "../Layer3/NetworkFrame.h"
+#include "../FrameQueue/Frame_Queue.h"
 
 
 #define PREAMBLE 0
@@ -172,6 +173,13 @@ void sendDllFrame(){
             //serialWriteStr("5555555");
             // Nothing to send, force data bit to 0
             controlBit(&PORTB,PORTB5,0);
+	    //Check if there is a frame to send
+	    struct Node* node = getFrameFromQueue();
+	    if(node!=NULL && node->frame != NULL){
+		copyFrameToSendBuffer(node->frame);
+		free(node->frame);
+		free(node);
+	    }
         }
     }
 }
@@ -210,6 +218,8 @@ void recvDllFrame(){
 	static uint8_t bits_recv = 0;
 	static bool read_payload = false;
 	static uint8_t recv_buffer_size = 0;
+	static bool add_data_to_forward_frame = false;
+	static struct Node* forward = NULL;
 	
 	if(!preamble_recv){
 		checkPreambleRecv();
@@ -282,6 +292,16 @@ void recvDllFrame(){
                     preamble_recv = false;
                 }
             }
+	    else if(bytes_recv == 5){
+		
+		if(checkDestination(recv_buffer)){
+		    forward = addFrameToQueue(NULL);
+		    add_data_to_forward_frame = true;
+		}
+		else{
+		    serialWriteStr("Self");
+		}
+	    }
             else if(read_payload && bytes_recv == frameSize(recv_buffer)){
                 serialWriteStr("Receive frame completed");
                 bytes_recv = 0;
@@ -289,13 +309,25 @@ void recvDllFrame(){
                 read_payload = false;
                 preamble_recv = false;
                 
-                //printFrame(recv_buffer);
-                if(received_frame != NULL){
-					free(received_frame);
-				}
-                received_frame = (uint8_t*)malloc(frameSize(recv_buffer)*sizeof(uint8_t));
-                memcpy(received_frame,recv_buffer,frameSize(recv_buffer));
                 
+		if(add_data_to_forward_frame){
+		    uint8_t* forward_frame = (uint8_t*)malloc(frameSize(recv_buffer)*sizeof(uint8_t));
+		    memcpy(forward_frame,recv_buffer,frameSize(recv_buffer));
+		    add_data_to_forward_frame = false;
+		    serialWriteStr("Added data to forward frame");
+		    forward->frame = forward_frame;
+		    forward = NULL;
+		}
+		else{
+		    if(received_frame != NULL){
+			free(received_frame);
+		    }
+                
+		    received_frame = (uint8_t*)malloc(frameSize(recv_buffer)*sizeof(uint8_t));
+		    memcpy(received_frame,recv_buffer,frameSize(recv_buffer));
+		    printFrame(received_frame);
+		}
+		
                 free(recv_buffer);
                 recv_buffer = NULL;
             }
