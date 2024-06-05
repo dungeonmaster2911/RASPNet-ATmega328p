@@ -311,7 +311,7 @@ void recvDllFrame(){
 		}
 	    }
             else if(read_payload && bytes_recv == frameSize(recv_buffer)){
-                serialWriteStr("Receive frame completed");
+                serialWriteStr("Receive frame completed  xxxx");
                 bytes_recv = 0;
                 bits_recv= 0;
                 read_payload = false;
@@ -328,15 +328,24 @@ void recvDllFrame(){
 			forward = NULL;
 		    }
 		    else{
-			if(received_frame != NULL){
-			    free(received_frame);
+			
+			uint8_t* crc_comp = (uint8_t*)malloc(4*sizeof(uint8_t));						
+			crc32(crc_comp,pPayload(recv_buffer),*pSize(recv_buffer));
+			
+			if(*((uint32_t*)crc_comp) == *((uint32_t*)pCRC(recv_buffer))){
+			    
+			    if(received_frame != NULL){
+				free(received_frame);
+			    }
+			
+			    received_frame = (uint8_t*)malloc(frameSize(recv_buffer)*sizeof(uint8_t));
+			    memcpy(received_frame,recv_buffer,frameSize(recv_buffer));
 			}
-                
-			received_frame = (uint8_t*)malloc(frameSize(recv_buffer)*sizeof(uint8_t));
-			memcpy(received_frame,recv_buffer,frameSize(recv_buffer));
-			//printFrame(received_frame);
+			else{
+			    serialWriteStr("CRC Mismatch packet discarded !");
+			}
+			
 		    }
-		//}
 		
                 free(recv_buffer);
                 recv_buffer = NULL;
