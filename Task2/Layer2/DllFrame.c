@@ -173,6 +173,7 @@ void sendDllFrame(){
             //bytes_to_send = *(send_buffer+5)+6;
             bytes_to_send = frameSize(send_buffer);
             sending = true;
+	    serialWriteStr("Start of send frame...");
         }
         else{
             //serialWriteStr("5555555");

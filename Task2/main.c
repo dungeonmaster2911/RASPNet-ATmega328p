@@ -23,7 +23,7 @@
 
 
 char* payload = "ABCD";
-static bool block_send = false;
+
 
 
 void handleRecveivedFrame(){
@@ -230,10 +230,7 @@ ISR(TIMER1_COMPA_vect){
 		
 	}
 	else{
-		if(!block_send)
-		ATOMIC_BLOCK(ATOMIC_RESTORESTATE){
 		sendDllFrame();
-		}
 	}
 	
 	phase = !phase;
@@ -241,9 +238,7 @@ ISR(TIMER1_COMPA_vect){
 }
 
 ISR(PCINT2_vect){
-    ATOMIC_BLOCK(ATOMIC_RESTORESTATE){
-		recvDllFrame();
-	}
+	recvDllFrame();
 }
 
 
