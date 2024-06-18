@@ -1,11 +1,13 @@
 #include "NetworkFrame.h"
 #include "../Utils/UsrUtils.h"
-/**
-* - Function to the pack network headers in the frame
-*/
+
 
 uint8_t self_addr = 1;
 
+
+/**
+* - Function to the pack network headers in the frame
+*/
 void addNetworkHeaders(uint8_t dest_addr, uint8_t src_addr, uint8_t* frame) {
     *pDestAddr(frame) = dest_addr; /// Add Destination Address value in the frame
     *pSrcAddr(frame) = src_addr; /// Add Source Address value in the frame

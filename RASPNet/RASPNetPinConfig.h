@@ -7,4 +7,3 @@
 
 void setIOPins();
 
-void enablePinInterrupt();

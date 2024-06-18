@@ -8,14 +8,7 @@
 */
 
 
-void controlBit(volatile uint8_t* reg,uint8_t pin,bool val){
-        if(val){
-                *reg |= _BV(pin);
-        }
-        else{
-                *reg &= ~_BV(pin);
-        }
-}
+
 #define PREAMBLE 0
 #define IDENTIFICATION 1
 #define FLAGS 2
@@ -24,6 +17,18 @@ void controlBit(volatile uint8_t* reg,uint8_t pin,bool val){
 #define CRC 5
 #define SIZE 9
 #define PAYLOAD 10
+
+/**
+* - Set/Unset specific bits of the provided register 
+*/
+void controlBit(volatile uint8_t* reg,uint8_t pin,bool val){
+        if(val){
+                *reg |= _BV(pin);
+        }
+        else{
+                *reg &= ~_BV(pin);
+        }
+}
 
 
 /**

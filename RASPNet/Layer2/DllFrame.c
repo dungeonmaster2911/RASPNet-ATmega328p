@@ -198,6 +198,10 @@ void sendDllFrame(){
 }
 
 
+
+/**
+* - Check if the received bits match the preample pattern (01111110)
+*/
 void checkPreambleRecv(){
 	static uint8_t preamble_buffer = 0;
 	
@@ -216,7 +220,7 @@ void checkPreambleRecv(){
             
     if(preamble_buffer==0b01111110){
 		serialWriteStr("Preamble Match");
-		preamble_recv = true;
+		preamble_recv = true; /// Set Global variable preamble_recv if received bits match the preample pattern
 		preamble_buffer = 0;
 		
 	}
@@ -225,6 +229,10 @@ void checkPreambleRecv(){
 	}
 }
 
+
+/**
+* - Receive t
+*/
 void recvDllFrame(){
 	static uint8_t bytes_recv = 0;
 	static uint8_t bits_recv = 0;

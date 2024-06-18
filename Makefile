@@ -1,5 +1,5 @@
-PRG            = $(shell find -name 'main.c' -exec basename {} .c \;)
-
+#PRG            = $(shell find -name 'main.c' -exec basename {} .c \;)
+PRG            = main
 
 MCU_TARGET     = atmega328p
 
@@ -8,7 +8,8 @@ OPTIMIZE       = -Os
 
 CC             = avr-gcc
 
-SRC = $(shell pwd)
+#SRC = $(shell pwd)
+SRC = ./RASPNet
 
 # Override is only needed by avr-lib build system.
 override CFLAGS        = -g -Wall $(OPTIMIZE) -mmcu=$(MCU_TARGET) $(DEFS)
