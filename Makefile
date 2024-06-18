@@ -31,12 +31,13 @@ dependency :
 	$(CC) $(CFLAGS) -c $(SRC)/Utils/UsrUtils.c -o UsrUtils.o
 	$(CC) $(CFLAGS) -c $(SRC)/Layer3/NetworkFrame.c -o NetworkFrame.o
 	$(CC) $(CFLAGS) -c $(SRC)/FrameQueue/Frame_Queue.c -o Frame_Queue.o
+	$(CC) $(CFLAGS) -c $(SRC)/main.c -o main.o
 
 $(PRG).elf: $(PRG).o DllFrame.o UARTSetup.o RASPNetPinConfig.o Custom_CRC32.o TimerConfig.o UsrUtils.o NetworkFrame.o Frame_Queue.o
 	$(CC) $(CFLAGS) -o $@ $^ $(LIBS) 
 
 # dependency:
-$(PRG).o: $(PRG).c
+#$(PRG).o: $(SRC)/$(PRG).c
 
 $(PRG).hex: $(PRG).elf
 	$(OBJCOPY) -j .text -j .data -O ihex $< $@
