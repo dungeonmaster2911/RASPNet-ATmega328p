@@ -46,4 +46,6 @@ flash:
 	
 clean:
 	rm -rf *.o *.map *.hex *.elf
-	
+
+doc:
+	doxygen DoxyConfig

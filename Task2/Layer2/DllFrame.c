@@ -100,7 +100,10 @@ void printFrameToSerial(uint8_t* dll_frame){
 }
 
 
-
+/**
+* - This function copies a frame to the send_buffer only if send buffer is not NULL.
+* - The send_buffer is set to null once the frame is transmitted.
+*/
 bool copyFrameToSendBuffer(uint8_t* dll_frame){
 	if(send_buffer == NULL){
 		
@@ -125,6 +128,10 @@ bool copyFrameToSendBuffer(uint8_t* dll_frame){
 }
 
 
+/**
+* - This function is responsible to transmit each bit of the frame stored in "send_buffer"
+* 	The bits are sent in the order -> MSB to LSB 
+*/
 void sendDllFrame(){
 	static uint8_t bytes_to_send = 0;
     static uint8_t bytes_sent = 0;
@@ -142,8 +149,8 @@ void sendDllFrame(){
             sprintf(string, "Bytes Sent=%d   Bits sent=%d Data=%d",bytes_sent,bits_sent,bit);
             serialWriteStr(string);
             free(string);
-	    #else
-	    //serialWrite('>');
+	    	#else
+	    	//serialWrite('>');
             #endif
 	    
             controlBit(&PORTB,PORTB5,bit);
@@ -179,17 +186,16 @@ void sendDllFrame(){
             //serialWriteStr("5555555");
             // Nothing to send, force data bit to 0
             controlBit(&PORTB,PORTB5,0);
-	    //Check if there is a frame to send
-	    struct Node* node = getFrameFromQueue();
-	    if(node!=NULL && node->frame != NULL){
-		copyFrameToSendBuffer(node->frame);
-		free(node->frame);
-		free(node);
-	    }
+	    	//Check if there is a frame to send
+	    	struct Node* node = getFrameFromQueue();
+	    	if(node!=NULL && node->frame != NULL){
+				copyFrameToSendBuffer(node->frame);
+				free(node->frame);
+				free(node);
+	    	}
         }
     }
 }
-
 
 
 void checkPreambleRecv(){
@@ -301,57 +307,54 @@ void recvDllFrame(){
 	    else if(bytes_recv == 5 && bits_recv == 0){
 		serialWriteStr("RECEIVED UNTILL SRC ADDR");
 		
-		if(checkDestination(recv_buffer)){
-		    serialWriteStr("Forward");
-		    forward = addFrameToQueue(NULL);
-		    add_data_to_forward_frame = true;
-		}
-		else{
-		    serialWriteStr("Self");
-		}
+			if(checkDestination(recv_buffer)){
+		    	serialWriteStr("Forward");
+		    	forward = addFrameToQueue(NULL);
+		    	add_data_to_forward_frame = true;
+			}
+			else{
+		    	serialWriteStr("Self");
+			}
 	    }
-            else if(read_payload && bytes_recv == frameSize(recv_buffer)){
-                serialWriteStr("Receive frame completed  xxxx");
-                bytes_recv = 0;
-                bits_recv= 0;
-                read_payload = false;
-                preamble_recv = false;
+        else if(read_payload && bytes_recv == frameSize(recv_buffer)){
+            serialWriteStr("Receive frame completed  xxxx");
+			bytes_recv = 0;
+		    bits_recv= 0;
+			read_payload = false;
+			preamble_recv = false;
                 
                 //ATOMIC_BLOCK(ATOMIC_RESTORESTATE){
 		    if(add_data_to_forward_frame){
-			uint8_t* forward_frame = (uint8_t*)malloc(frameSize(recv_buffer)*sizeof(uint8_t));
-			memcpy(forward_frame,recv_buffer,frameSize(recv_buffer));
-			add_data_to_forward_frame = false;
-			serialWriteStr("Adding data to forward frame");
-			printFrame(forward_frame);
-			forward->frame = forward_frame;
-			forward = NULL;
+				uint8_t* forward_frame = (uint8_t*)malloc(frameSize(recv_buffer)*sizeof(uint8_t));
+				memcpy(forward_frame,recv_buffer,frameSize(recv_buffer));
+				add_data_to_forward_frame = false;
+				serialWriteStr("Adding data to forward frame");
+				printFrame(forward_frame);
+				forward->frame = forward_frame;
+				forward = NULL;
 		    }
 		    else{
 			
-			uint8_t* crc_comp = (uint8_t*)malloc(4*sizeof(uint8_t));						
-			crc32(crc_comp,pPayload(recv_buffer),*pSize(recv_buffer));
+				uint8_t* crc_comp = (uint8_t*)malloc(4*sizeof(uint8_t));						
+				crc32(crc_comp,pPayload(recv_buffer),*pSize(recv_buffer));
 			
-			if(*((uint32_t*)crc_comp) == *((uint32_t*)pCRC(recv_buffer))){
+				if(*((uint32_t*)crc_comp) == *((uint32_t*)pCRC(recv_buffer))){
 			    
-			    if(received_frame != NULL){
-				free(received_frame);
-			    }
+			    	if(received_frame != NULL){
+						free(received_frame);
+			    	}
 			
-			    received_frame = (uint8_t*)malloc(frameSize(recv_buffer)*sizeof(uint8_t));
-			    memcpy(received_frame,recv_buffer,frameSize(recv_buffer));
-			}
-			else{
-			    serialWriteStr("CRC Mismatch packet discarded !");
-			}
-			
+			    	received_frame = (uint8_t*)malloc(frameSize(recv_buffer)*sizeof(uint8_t));
+			    	memcpy(received_frame,recv_buffer,frameSize(recv_buffer));
+				}
+				else{
+			    	serialWriteStr("CRC Mismatch packet discarded !");
+				}
 		    }
-		
-                free(recv_buffer);
-                recv_buffer = NULL;
-            }
+            free(recv_buffer);
+            recv_buffer = NULL;
+        }
 	}
-
 }
 
 
