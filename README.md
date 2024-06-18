@@ -44,14 +44,14 @@ minicom ama0
 
 ### Code Documentation
 - Tool Used
- * [DoxyGen](https://doxygen.nl/download.html)
+  * [DoxyGen](https://doxygen.nl/download.html)
 
 - Generate Documents
 ```sh
 make doc
 ```
 - Access the Documents
- * After running the previous command "RASPNet_Documentation" directory is created
- * Current "DoxyConfig" generates HTML docments
- * Navigate to RASPNet_Documentation\html
- * Open index.html in any browser
+  * After running the previous command "RASPNet_Documentation" directory is created
+  * Current "DoxyConfig" generates HTML docments
+  * Navigate to RASPNet_Documentation\html
+  * Open index.html in any browser
