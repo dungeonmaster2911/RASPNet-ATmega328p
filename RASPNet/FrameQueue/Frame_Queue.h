@@ -24,5 +24,4 @@ struct Node* addFrameToQueue(uint8_t* frame);
 
 struct Node* getFrameFromQueue();
 
-
 struct Node* peekFrameFromQueue();

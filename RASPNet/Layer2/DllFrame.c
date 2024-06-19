@@ -1,3 +1,8 @@
+/**
+* @file DllFrame.c
+* @brief This file implements functionalities of the Layer 2
+*/
+
 #include "DllFrame.h"
 #include "../Utils/UsrUtils.h"
 #include "../UART/UARTSetup.h"
@@ -33,7 +38,9 @@ uint8_t* received_frame = NULL;
 static bool preamble_recv = false;
 
 
-
+/**
+* @brief TO BE REMOVED
+*/
 uint8_t* createDllFrame(uint8_t* payload, uint8_t payload_len){
     // Allocate memory for buffer
     // 1 byte preamble, 4 bytes CRC, 1 byte size, n byte of data length
@@ -65,6 +72,9 @@ uint8_t* createDllFrame(uint8_t* payload, uint8_t payload_len){
     return dll_frame;
 }
 
+/**
+* @brief TO BE REMOVED
+*/
 void printFrameToSerial(uint8_t* dll_frame){
 	
 	if(dll_frame == NULL){
@@ -101,7 +111,9 @@ void printFrameToSerial(uint8_t* dll_frame){
 
 
 /**
-* - This function copies a frame to the send_buffer only if send buffer is not NULL.
+* @brief This function copies a frame to the send_buffer only if send buffer is not NULL.
+* 
+* **Further Details**
 * - The send_buffer is set to null once the frame is transmitted.
 */
 bool copyFrameToSendBuffer(uint8_t* dll_frame){
@@ -129,8 +141,9 @@ bool copyFrameToSendBuffer(uint8_t* dll_frame){
 
 
 /**
-* - This function is responsible to transmit each bit of the frame stored in "send_buffer"
-* 	The bits are sent in the order -> MSB to LSB 
+* @brief This function is responsible to transmit each bit of the frame stored in "send_buffer"
+* **Further Details**
+* - The bits are sent in the order -> MSB to LSB 
 */
 void sendDllFrame(){
 	static uint8_t bytes_to_send = 0;
@@ -200,7 +213,9 @@ void sendDllFrame(){
 
 
 /**
-* - Check if the received bits match the preample pattern (01111110)
+* @brief Check if the received bits match the preample pattern (01111110)
+* 
+* **Further Details**
 */
 void checkPreambleRecv(){
 	static uint8_t preamble_buffer = 0;
@@ -220,7 +235,7 @@ void checkPreambleRecv(){
             
     if(preamble_buffer==0b01111110){
 		serialWriteStr("Preamble Match");
-		preamble_recv = true; /// Set Global variable preamble_recv if received bits match the preample pattern
+		preamble_recv = true; /// - Set Global variable `preamble_recv` if received bits match the preample pattern
 		preamble_buffer = 0;
 		
 	}
@@ -231,7 +246,9 @@ void checkPreambleRecv(){
 
 
 /**
-* - Receive t
+* @brief Receive frame bit by bit
+* 
+* **Further Details**
 */
 void recvDllFrame(){
 	static uint8_t bytes_recv = 0;
@@ -283,7 +300,7 @@ void recvDllFrame(){
             
             
             
-            if(bytes_recv == 10 && !read_payload){
+            if(bytes_recv == 10 && !read_payload){ /// - Read Payload size realloc sufficient memory for frame
                 serialWriteStr("RECEIVED UNTILL SIZE");
                 
                 char* string = (char*)malloc(80*sizeof(char));
@@ -312,7 +329,7 @@ void recvDllFrame(){
                     preamble_recv = false;
                 }
             }
-	    else if(bytes_recv == 5 && bits_recv == 0){
+	    else if(bytes_recv == 5 && bits_recv == 0){ /// - Check if Frame needs to be forwarded or not
 		serialWriteStr("RECEIVED UNTILL SRC ADDR");
 		
 			if(checkDestination(recv_buffer)){
@@ -324,7 +341,7 @@ void recvDllFrame(){
 		    	serialWriteStr("Self");
 			}
 	    }
-        else if(read_payload && bytes_recv == frameSize(recv_buffer)){
+        else if(read_payload && bytes_recv == frameSize(recv_buffer)){ /// - Process after reading the complete frame
             serialWriteStr("Receive frame completed  xxxx");
 			bytes_recv = 0;
 		    bits_recv= 0;
@@ -366,7 +383,11 @@ void recvDllFrame(){
 }
 
 
-
+/**
+* @brief Get a copy of the received frame
+* 
+* **Further Details**
+*/
 uint8_t* getRecvFrame(){
 	if(received_frame == NULL){
 		return NULL;
@@ -374,9 +395,9 @@ uint8_t* getRecvFrame(){
 	
 	
 	uint8_t* frame = (uint8_t*)malloc(frameSize(received_frame)*sizeof(uint8_t));
-	memcpy(frame,received_frame,frameSize(received_frame));
+	memcpy(frame,received_frame,frameSize(received_frame)); /// - Make a copy of the `received_frame`
 	
-	free(received_frame);
+	free(received_frame);/// - Clear the `received_frame` buffer
 	received_frame = NULL;
-	return frame;
+	return frame; ///@return pointer to the copy of received frame 
 }

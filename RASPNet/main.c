@@ -218,7 +218,11 @@ int main(){
 }
 
 
-
+/**
+* @brief Layer 1 Clock
+* 
+* **Further Details**
+*/
 ISR(TIMER1_COMPA_vect){
     //Variable to implement phase shift
     static bool phase = false;
@@ -237,6 +241,11 @@ ISR(TIMER1_COMPA_vect){
     
 }
 
+/**
+* @brief Layer 1 Data
+* 
+* **Further Details**
+*/
 ISR(PCINT2_vect){
 	recvDllFrame();
 }

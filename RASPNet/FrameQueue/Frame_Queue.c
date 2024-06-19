@@ -1,5 +1,6 @@
 /**
-* - This file implements basic functionalities for a FIFO queue, to handle multiple sending frames.
+* @file Frame_Queue.c
+* @brief This file implements basic functionalities for a FIFO queue, to handle multiple sending frames.
 */
 
 
@@ -7,16 +8,24 @@
 
 struct Frame_Queue* frame_queue = NULL;
 
-
+/**
+* @brief Creates a new node
+* 
+* @param uint8_t* frame pointer to the loaded frame
+* 
+* 
+*/
 struct Node* newNode(uint8_t* frame){
 	struct Node* node = (struct Node*)malloc(sizeof(struct Node));
 	node->frame = frame;
 	node->next = NULL;
-	return node;
+	return node; ///@return Node* pointer to the newly created node
 }
 
 /**
-* - This function initializes a FIFO queue (frame_queue) to store the sending frames.
+* @brief This function initializes a FIFO queue (frame_queue) to store the sending frames.
+* 
+* **Further Details**
 * - There can only be one queue at a time, if new queue is created the old queue is cleared and freed.
 */
 void createFrameQueue(){
@@ -31,26 +40,31 @@ void createFrameQueue(){
 }
 
 /**
-* - Adds new frame (in form of a node) to the frame_queue.
+* @brief Adds new frame (in form of a node) to the frame_queue.
 * 
+* @param uint8_t* frame pointer to the loaded frame
+* 
+* **Further Details**
 */
 struct Node* addFrameToQueue(uint8_t* frame){
 	
-	struct Node* node = newNode(frame); /// Create a new node with provided frame.
+	struct Node* node = newNode(frame); /// - Create a new node with provided frame.
 	
 	if(frame_queue->rear == NULL){
 		frame_queue->front = frame_queue->rear = node;
 		return node;
 	}
 	
-	frame_queue->rear->next = node; /// Add the node to the frame_queue.
+	frame_queue->rear->next = node; /// - Add the node to the frame_queue.
 	frame_queue->rear = node;
 	
-	return node; /// Return the pointer to newly added frame node.
+	return node; ///@return Node* pointer to newly added frame node.
 }
 
 /**
-* - Pop the front most node from the frame_queue.
+* @brief the front most node from the frame_queue.
+* 
+* **Further Details**
 */
 struct Node* getFrameFromQueue(){
 	if(frame_queue->front == NULL){
@@ -65,19 +79,18 @@ struct Node* getFrameFromQueue(){
 		frame_queue->rear = NULL;
 	}
 	
-	/// Return the removed node
-	return node;
+	return node; /// @return Node* pointer to the removed node
 }
 
 
 /**
-* - Returns the front most node from the frame_queue (without removing it from the queue).
+* @brief Returns the front most node from the frame_queue (without removing it from the queue).
 */
 struct Node* peekFrameFromQueue(){
 	if(frame_queue->front == NULL){
 		return NULL;
 	}
-	return frame_queue->front;
+	return frame_queue->front; /// @return Node* pointer to the front most node
 }
 
 

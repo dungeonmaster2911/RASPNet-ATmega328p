@@ -10,13 +10,14 @@ Implementation of [RASPNet Protocol](https://osg.informatik.tu-chemnitz.de/lehre
 
 ### Project Tree
 ```sh
-├── DoxyConfig -> Config file for Doxygen Documentation
+├──README.md -> Brief docummentaion of the project 
+
 ├── Makefile  ->  Contain the make rules for the project
-├── RASPNet -> Implementation of the protocol 
-├── README.md -> 
-├── Task1 -> (miscellaneous) Solution for Lab Task 1
-├── Task2 -> (miscellaneous) Solution for Lab Task 2
-└── Task3 -> (miscellaneous) Solution for Lab Task 3
+├── RASPNet/ -> Implementation of the protocol 
+├── DoxyConfig -> Config file for Doxygen Documentation
+├── Task1/ -> (miscellaneous) Solution for Lab Task 1
+├── Task2/ -> (miscellaneous) Solution for Lab Task 2
+└── Task3/ -> (miscellaneous) Solution for Lab Task 3
 ```
 
 ### How to build the project and flash application to ATMEGA328p 

@@ -1,7 +1,18 @@
+/**
+* @file Custom_CRC32.c
+* @brief This file implements Custom CRC32 functionality 
+*/
+
+
 #include "Custom_CRC32.h"
 
 /**
-* - Calculates CRC32
+* @brief **Calculates CRC32**
+* @param uint8_t* crc pointer with 4 bytes of pre-allocated memory to store CRC value
+* @param uint8_t* payload pointer to the payload data
+* @param uint8_t payload_len length of payload in bytes
+*  
+* **Further Details**
 */
 
 void crc32(uint8_t* crc, uint8_t* payload, uint8_t payload_len) {
@@ -25,5 +36,9 @@ void crc32(uint8_t* crc, uint8_t* payload, uint8_t payload_len) {
             }
         }
     }
-    /// CRC bits are NOT reversed ! 
+    /// CRC bits are NOT reversed !
+
+    
+    
+    
 }
