@@ -31,9 +31,10 @@ dependency :
 	$(CC) $(CFLAGS) -c $(SRC)/Utils/UsrUtils.c -o UsrUtils.o
 	$(CC) $(CFLAGS) -c $(SRC)/Layer3/NetworkFrame.c -o NetworkFrame.o
 	$(CC) $(CFLAGS) -c $(SRC)/FrameQueue/Frame_Queue.c -o Frame_Queue.o
+	$(CC) $(CFLAGS) -c $(SRC)/PiAtmegaAPI/PiAtmegaAPI.c -o PiAtmegaAPI.o
 	$(CC) $(CFLAGS) -c $(SRC)/main.c -o main.o
 
-$(PRG).elf: $(PRG).o DllFrame.o UARTSetup.o RASPNetPinConfig.o Custom_CRC32.o TimerConfig.o UsrUtils.o NetworkFrame.o Frame_Queue.o
+$(PRG).elf: $(PRG).o DllFrame.o UARTSetup.o RASPNetPinConfig.o Custom_CRC32.o TimerConfig.o UsrUtils.o NetworkFrame.o Frame_Queue.o PiAtmegaAPI.o
 	$(CC) $(CFLAGS) -o $@ $^ $(LIBS) 
 
 # dependency:

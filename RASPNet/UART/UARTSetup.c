@@ -87,3 +87,4 @@ char* serialReadStr(){
     
     *(string + idx) = '\0';
     return string; ///@return char* pointer to read string
+}

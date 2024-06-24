@@ -14,12 +14,12 @@
 
 
 #define PREAMBLE 0
-#define IDENTIFICATION 1
-#define FLAGS 2
-#define DEST_ADDR 3
-#define SRC_ADDR 4
-#define CRC 5
-#define SIZE 9
+#define IDENTIFICATION 8
+#define FLAGS 9
+#define DEST_ADDR 6
+#define SRC_ADDR 7
+#define CRC 1
+#define SIZE 5
 #define PAYLOAD 10
 
 
@@ -300,7 +300,7 @@ void recvDllFrame(){
             
             
             
-            if(bytes_recv == 10 && !read_payload){ /// - Read Payload size realloc sufficient memory for frame
+            if(bytes_recv == (SIZE+1) && !read_payload){ /// - Read Payload size realloc sufficient memory for frame
                 serialWriteStr("RECEIVED UNTILL SIZE");
                 
                 char* string = (char*)malloc(80*sizeof(char));
@@ -329,7 +329,7 @@ void recvDllFrame(){
                     preamble_recv = false;
                 }
             }
-	    else if(bytes_recv == 5 && bits_recv == 0){ /// - Check if Frame needs to be forwarded or not
+	    else if(bytes_recv == (SRC_ADDR+1) && bits_recv == 0){ /// - Check if Frame needs to be forwarded or not
 		serialWriteStr("RECEIVED UNTILL SRC ADDR");
 		
 			if(checkDestination(recv_buffer)){

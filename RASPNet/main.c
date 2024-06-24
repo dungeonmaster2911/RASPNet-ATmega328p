@@ -19,7 +19,7 @@
 #include "Layer2/DllFrame.h"
 #include "Layer3/NetworkFrame.h"
 #include "FrameQueue/Frame_Queue.h"
-
+#include "PiAtmegaAPI/PiAtmegaAPI.h"
 
 
 char* payload = "ABCD";
@@ -46,12 +46,12 @@ void checkInput(){
 		case '1':
 			pd = "case1";
 			frame = createFrame((uint8_t*)pd,strlen(pd));
-			addNetworkHeaders(1,1,frame);
+			addNetworkHeaders(2,1,frame);
 			break;
 		case '2':
 		    pd = "case2";
 			frame = createFrame((uint8_t*)pd,strlen(pd));
-			addNetworkHeaders(56,1,frame);
+			addNetworkHeaders(1,2,frame);
 			break;
 		case '3':
 			pd = "case3";
@@ -95,6 +95,10 @@ int main(){
 	
 	
 	while(true){
+		//char* serial_str = serialReadStr();
+		//serialWriteStr(serial_str);
+		//parseCmdFromPi(serial_str);
+		//free(serial_str);
 		ATOMIC_BLOCK(ATOMIC_RESTORESTATE){
 			checkInput();
 			handleRecveivedFrame();

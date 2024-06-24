@@ -9,12 +9,12 @@
 #include "../CRC/Custom_CRC32.h"
 
 #define PREAMBLE 0
-#define IDENTIFICATION 1
-#define FLAGS 2
-#define DEST_ADDR 3
-#define SRC_ADDR 4
-#define CRC 5
-#define SIZE 9
+#define IDENTIFICATION 8
+#define FLAGS 9
+#define DEST_ADDR 6
+#define SRC_ADDR 7
+#define CRC 1
+#define SIZE 5
 #define PAYLOAD 10
 
 /**
@@ -117,10 +117,13 @@ void printFrame(uint8_t* frame){
         }
         
         if(pPayload(frame)){
+                serialWrite('\n');
                 for(int i=0;i<*pSize(frame);i++){
-                        sprintf(string, "Data_BY_%d  CHAR = %c INT = %d",i,*(pPayload(frame)+i),*(pPayload(frame)+i));
-                        serialWriteStr(string);
-                }    
+                        //sprintf(string, "Data_BY_%d  CHAR = %c INT = %d",i,*(pPayload(frame)+i),*(pPayload(frame)+i));
+                        //serialWriteStr(string);
+                        serialWrite(*(pPayload(frame)+i));
+                }
+                serialWrite('\n');    
         }
         
         free(string);
