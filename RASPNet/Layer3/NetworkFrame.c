@@ -8,7 +8,7 @@
 #include "../Utils/UsrUtils.h"
 
 
-uint8_t self_addr = 1;
+static uint8_t self_addr = 1;
 
 
 /**
@@ -44,3 +44,11 @@ uint8_t checkDestination(uint8_t* frame){
 	return ret_val; ///@return 0 = No need to forward the frame OR 1 = Need to forward the frame
 }
 
+
+uint8_t getSelfAddr(){
+	return self_addr;
+}
+
+void setSelfAddr(uint8_t addr){
+	self_addr = addr;
+}

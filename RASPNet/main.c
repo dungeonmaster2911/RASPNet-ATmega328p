@@ -100,15 +100,14 @@ int main(){
 	
 	
 	while(true){
-		//char* serial_str = serialReadStr();
-		//serialWriteStr(serial_str);
-		//parseCmdFromPi(serial_str);
-		//free(serial_str);
-		checkInput();
-		ATOMIC_BLOCK(ATOMIC_RESTORESTATE){
-			
-			handleRecveivedFrame();
-		}
+		char* serial_str = serialReadStr();
+		serialWriteStr(serial_str);
+		parseCmdFromPi(serial_str);
+		free(serial_str);
+		//checkInput();
+		//ATOMIC_BLOCK(ATOMIC_RESTORESTATE){
+		//	handleRecveivedFrame();
+		//}
 		/*
 		for(int i=0;i<3;i++){
 			char* serial_str = serialReadStr();
