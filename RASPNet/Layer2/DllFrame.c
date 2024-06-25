@@ -123,7 +123,7 @@ bool copyFrameToSendBuffer(uint8_t* dll_frame){
 		
 		send_buffer = (uint8_t*)malloc(frameSize(dll_frame)*sizeof(uint8_t));
 		memcpy(send_buffer,dll_frame,frameSize(dll_frame));
-		printFrame(send_buffer);
+		//printFrame(send_buffer);
 		
 		//send_buffer = (uint8_t*)malloc(frame_size*sizeof(uint8_t));
 		//memcpy(send_buffer,dll_frame,frame_size);
@@ -200,8 +200,9 @@ void sendDllFrame(){
             // Nothing to send, force data bit to 0
             controlBit(&PORTB,PORTB5,0);
 	    	//Check if there is a frame to send
-	    	struct Node* node = getFrameFromQueue();
+	    	struct Node* node = peekFrameFromQueue();
 	    	if(node!=NULL && node->frame != NULL){
+				node = getFrameFromQueue();
 				copyFrameToSendBuffer(node->frame);
 				free(node->frame);
 				free(node);
@@ -355,7 +356,9 @@ void recvDllFrame(){
 				add_data_to_forward_frame = false;
 				serialWriteStr("Adding data to forward frame");
 				printFrame(forward_frame);
+				//addFrameToQueue(forward_frame);
 				forward->frame = forward_frame;
+				printFrame(forward->frame);
 				forward = NULL;
 		    }
 		    else{

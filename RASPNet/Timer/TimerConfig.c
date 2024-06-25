@@ -16,7 +16,7 @@ void timerInit(){
     //OCR1A = 31249; // frequency of 0.5 second
     //OCR1A = 15624; // frequency of 0.25 second
     //OCR1A = 6000;
-    OCR1A = 600; // frequency of 0.25 second
+    OCR1A = 1000; // frequency of 0.25 second
 
     /// - Set clock prescalar 256
     TCCR1B |= (1 << CS02);        
