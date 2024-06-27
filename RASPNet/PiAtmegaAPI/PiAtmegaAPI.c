@@ -1,11 +1,14 @@
 #include "PiAtmegaAPI.h"
 #include "../UART/UARTSetup.h"
+#include "../Utils/UsrUtils.h"
+#include "../Layer2/DllFrame.h"
 #include "../Layer3/NetworkFrame.h"
+#include "../FrameQueue/Frame_Queue.h"
 
 void parseCmdFromPi(const char* cmd_str){
 	
 	int read_int;
-	static char data[256];
+	static char  data[256];
 	static uint8_t dest_addr = 0;
 	char* string = (char*)malloc(40*sizeof(char));
 	
@@ -14,7 +17,7 @@ void parseCmdFromPi(const char* cmd_str){
 	
 	switch(*cmd_str){
 		case 'A':
-			sscanf(cmd_str,"A%d",&read_int);
+			sscanf(cmd_str,"A %d",&read_int);
 			if(read_int > 0 && read_int < 256){
 				
 				sprintf(string, "Old Self Address: %d",getSelfAddr());
@@ -30,13 +33,14 @@ void parseCmdFromPi(const char* cmd_str){
 			}
 			break;
 		case 'D':
-			memcpy(data,(cmd_str+1),strlen((cmd_str+1)));
+			memset(data,0,strlen(data));
+			memcpy(data,(cmd_str+2),strlen((cmd_str+1)));
 			sprintf(string, "Payload: %s\nPayload Length: %d",data,strlen(data));
 			serialWriteStr(string);
 			payload_ready = true;
 			break;
 		case 'B':
-			sscanf(cmd_str,"B%d",&read_int);
+			sscanf(cmd_str,"B %d",&read_int);
 			if(read_int >= 0 && read_int < 256 && read_int != getSelfAddr()){
 				dest_addr = read_int;
 				sprintf(string, "Destination Address: %d",dest_addr);
@@ -53,6 +57,12 @@ void parseCmdFromPi(const char* cmd_str){
 				serialWriteStr(string);
 				sprintf(string, "Destination Address: %d",dest_addr);
 				serialWriteStr(string);
+				
+				uint8_t*frame = createFrame((uint8_t*)data,strlen(data));
+				addNetworkHeaders(dest_addr,getSelfAddr(),frame);
+				addFrameToQueue(frame);
+				
+				memset(data,0,strlen(data));
 				payload_ready = false;
 				dest_addr_ready = false;
 			}
@@ -66,8 +76,15 @@ void parseCmdFromPi(const char* cmd_str){
 			}
 			
 			break;
+		case 'T':
+			/// Test cases !!!
 		default:
 			serialWriteStr("No case match");
+			serialWriteStr("HELP \
+							\nSelf address value (1-255) --> A xx\
+							\nPayload message (max length 255 characters) --> D xyz\
+							\nDestination address value (0-255) --> B xx\
+							\nSend the message --> P");
 			break;
 	}
 	

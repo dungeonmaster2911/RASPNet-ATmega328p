@@ -101,9 +101,12 @@ int main(){
 	
 	while(true){
 		char* serial_str = serialReadStr();
-		serialWriteStr(serial_str);
-		parseCmdFromPi(serial_str);
-		free(serial_str);
+		if(serial_str){
+			serialWriteStr(serial_str);
+			parseCmdFromPi(serial_str);
+			free(serial_str);
+		}
+		
 		//checkInput();
 		//ATOMIC_BLOCK(ATOMIC_RESTORESTATE){
 		//	handleRecveivedFrame();

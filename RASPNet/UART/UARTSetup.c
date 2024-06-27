@@ -74,8 +74,12 @@ uint8_t serialRead(bool block)
 * 
 */
 char* serialReadStr(){
-    char* string = (char*)malloc(40*sizeof(char));
     
+    if(( UCSR0A & (1<<RXC0)) == 0){
+        return NULL;
+    }
+    
+    char* string = (char*)malloc(40*sizeof(char));
     char char_data = serialRead(true);
     int idx = 0;
     
