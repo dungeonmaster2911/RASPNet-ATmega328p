@@ -78,6 +78,9 @@ void parseCmdFromPi(const char* cmd_str){
 			break;
 		case 'T':
 			/// Test cases !!!
+			///sscanf(cmd_str,"T %d",&read_int);
+			///sendTestMsg((char)read_int);
+			///break;
 		default:
 			serialWriteStr("No case match");
 			serialWriteStr("HELP \
@@ -89,4 +92,52 @@ void parseCmdFromPi(const char* cmd_str){
 	}
 	
 	free(string);
+}
+
+void sendTestMsg(char c){
+	
+	static char* pd = "casex";
+	uint8_t* frame = NULL;
+	
+	switch(c){
+		case '1':
+			pd = "case1";
+			frame = createFrame((uint8_t*)pd,strlen(pd));
+			addNetworkHeaders(2,1,frame);
+			addFrameToQueue(frame);
+			break;
+		case '2':
+		    pd = "case2";
+			frame = createFrame((uint8_t*)pd,strlen(pd));
+			addNetworkHeaders(1,2,frame);
+			addFrameToQueue(frame);
+			break;
+		case '3':
+			pd = "case3";
+			frame = createFrame((uint8_t*)pd,strlen(pd));
+			addNetworkHeaders(0,1,frame);
+			addFrameToQueue(frame);
+			break;
+		case '4':
+			pd = "case4";
+			frame = createFrame((uint8_t*)pd,strlen(pd));
+			addNetworkHeaders(5,6,frame);
+			addFrameToQueue(frame);
+			break;
+		case '5':
+			pd = "case5";
+			frame = createFrame((uint8_t*)pd,strlen(pd));
+			addNetworkHeaders(0,6,frame);
+			addFrameToQueue(frame);
+			break;
+		case '6':
+			// clear queue
+			serialWriteStr("CLEAR QUEUE !!!!");
+			createFrameQueue();
+			return;
+			break;
+		default:
+			return;
+			break;
+	}
 }

@@ -27,7 +27,12 @@ char* payload = "ABCD";
 
 
 void handleRecveivedFrame(){
-	uint8_t* recv_frame = getRecvFrame();
+	uint8_t* recv_frame;
+	
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE){
+		recv_frame = getRecvFrame();
+	}
+		
 	if(recv_frame !=NULL){
 		printFrame(recv_frame);
 		free(recv_frame);
@@ -36,56 +41,12 @@ void handleRecveivedFrame(){
 }
 
 void checkInput(){
-	static uint8_t serial_data = 0;
-	static char* pd = "casex";
-	uint8_t* frame = NULL;
-	
-	
-	serial_data = serialRead(false);
-	switch(serial_data){
-		case '1':
-			pd = "case1";
-			frame = createFrame((uint8_t*)pd,strlen(pd));
-			addNetworkHeaders(2,1,frame);
-			addFrameToQueue(frame);
-			break;
-		case '2':
-		    pd = "case2";
-			frame = createFrame((uint8_t*)pd,strlen(pd));
-			addNetworkHeaders(1,2,frame);
-			addFrameToQueue(frame);
-			break;
-		case '3':
-			pd = "case3";
-			frame = createFrame((uint8_t*)pd,strlen(pd));
-			addNetworkHeaders(0,1,frame);
-			addFrameToQueue(frame);
-			break;
-		case '4':
-			pd = "case4";
-			frame = createFrame((uint8_t*)pd,strlen(pd));
-			addNetworkHeaders(5,6,frame);
-			addFrameToQueue(frame);
-			break;
-		case '5':
-			pd = "case5";
-			frame = createFrame((uint8_t*)pd,strlen(pd));
-			addNetworkHeaders(0,6,frame);
-			addFrameToQueue(frame);
-			break;
-		case '6':
-			// clear queue
-			serialWriteStr("CLEAR QUEUE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-			createFrameQueue();
-			return;
-			break;
-		default:
-			return;
-			break;
+	char* serial_str = serialReadStr();
+	if(serial_str){
+		serialWriteStr(serial_str);
+		parseCmdFromPi(serial_str);
+		free(serial_str);
 	}
-	
-	
-	//printFrame(frame);
 }
 
 
@@ -100,17 +61,12 @@ int main(){
 	
 	
 	while(true){
-		char* serial_str = serialReadStr();
-		if(serial_str){
-			serialWriteStr(serial_str);
-			parseCmdFromPi(serial_str);
-			free(serial_str);
-		}
 		
-		//checkInput();
-		//ATOMIC_BLOCK(ATOMIC_RESTORESTATE){
-		//	handleRecveivedFrame();
-		//}
+		
+		checkInput();
+		handleRecveivedFrame();
+		
+		
 		/*
 		for(int i=0;i<3;i++){
 			char* serial_str = serialReadStr();
