@@ -9,4 +9,4 @@
 
 
 void parseCmdFromPi(const char* cmd_str);
-void sendTestMsg(char c);
+void sendTestMsg(uint8_t c);
