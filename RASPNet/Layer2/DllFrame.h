@@ -19,5 +19,4 @@ void recvDllFrame();
 
 uint8_t* getRecvFrame();
 
-
-//uint8_t frameSize(uint8_t* frame);
+void setDllDebug(bool enable);

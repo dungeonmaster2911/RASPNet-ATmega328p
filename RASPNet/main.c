@@ -43,7 +43,6 @@ void handleRecveivedFrame(){
 void checkInput(){
 	char* serial_str = serialReadStr();
 	if(serial_str){
-		serialWriteStr(serial_str);
 		parseCmdFromPi(serial_str);
 		free(serial_str);
 	}
@@ -56,7 +55,7 @@ int main(){
 	setIOPins();
 	USART_Init();
 	timerInit();
-	serialWriteStr("--------------INFINITE LOOP ENTRY -----------");
+	serialWriteStr("-------------RASPNET-----------");
 	_delay_ms(2000);
 	
 	
@@ -65,122 +64,6 @@ int main(){
 		
 		checkInput();
 		handleRecveivedFrame();
-		
-		
-		/*
-		for(int i=0;i<3;i++){
-			char* serial_str = serialReadStr();
-			serialWriteStr(serial_str);
-			uint8_t str_len = strlen(serial_str);
-			uint8_t* frame = createFrame((uint8_t*)serial_str,str_len);
-			addNetworkHeaders(29,29,frame);
-			
-			addFrameToQueue(frame);
-			serialWriteStr("Added frame to queue");
-			
-		}
-		block_send = false;
-		*/
-		
-		/*
-		for(int i=0;i<4;i++){
-			struct Node* node = getFrameFromQueue();
-			serialWriteStr("Removed frame from queue");
-			if(node == NULL){
-				serialWriteStr("NULL!!");
-				continue;
-			}
-			uint8_t* frame = node->frame;
-			
-			printFrame(frame);
-			free(frame);
-		}
-		*/
-		
-		
-		
-		/*
-		char* serial_str = serialReadStr();
-		serialWriteStr(serial_str);
-		uint8_t str_len = strlen(serial_str);
-		
-		uint8_t* frame = createFrame((uint8_t*)serial_str,str_len);
-		addNetworkHeaders(5,45,frame);
-		addFrameToQueue(frame);
-		*/
-		
-		/*
-		printFrame(frame);
-		ATOMIC_BLOCK(ATOMIC_RESTORESTATE){
-			copyFrameToSendBuffer(frame);
-		}
-		free(frame);
-		*/
-		
-		
-		/*
-		uint8_t* network_frame = addNetworkHeaders(123,234,(uint8_t*)serial_str,&str_len);
-		
-		//uint8_t * dll_frame = createDllFrame((uint8_t*)serial_str,strlen(serial_str));
-		uint8_t * dll_frame = createDllFrame(network_frame,str_len);
-		
-		copyFrameToSendBuffer(dll_frame);
-		free(serial_str);
-		free(dll_frame);
-		free(network_frame);
-		
-		dll_frame = NULL;
-		network_frame = NULL;
-		
-		*/
-		
-		/*
-		while(true){
-			uint8_t* frame = getRecvFrame();
-			static bool forward = false;
-			 
-			if(frame == NULL){
-				serialWriteStr("NO frame to read");
-			}
-			else{
-				switch(checkDestination(frame)){
-					case 0:serialWriteStr("BROADCAST");
-						forward = false;
-						break;
-					case 1:serialWriteStr("SELF");
-						uint8_t* crc_comp = (uint8_t*)malloc(4*sizeof(uint8_t));						
-						crc32(crc_comp,pPayload(frame),*pSize(frame));
-						
-						
-						char* string = (char*)malloc(40*sizeof(char));
-						sprintf(string, "CRC_CALC=%lx   CRC_RECV=%lx",*((uint32_t*)crc_comp),*((uint32_t*)pCRC(frame)));
-						serialWriteStr(string);
-						free(string);
-						
-						
-						if(*((uint32_t*)crc_comp) == *((uint32_t*)pCRC(frame))){
-							printFrame(frame);
-						}
-						else{
-							serialWriteStr("CRC error");
-						}
-						forward = false;
-						break;
-					case 2:serialWriteStr("FORWARD");
-						printFrame(frame);
-						copyFrameToSendBuffer(frame);
-						forward = true;
-						break;
-					default:serialWriteStr("ERROR");
-						break;
-				}
-				free(frame);
-				if(!forward)
-				break;
-			}
-			_delay_ms(2000);
-			
-		}*/
     }
 	return 0;
 }

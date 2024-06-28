@@ -81,6 +81,15 @@ void parseCmdFromPi(const char* cmd_str){
 			sscanf(cmd_str,"X %d",&read_int);
 			sendTestMsg((uint8_t)read_int);
 			break;
+		case 'V':
+			sscanf(cmd_str,"V %d",&read_int);
+			if(read_int == 1){
+				setDllDebug(true);
+			}
+			else{
+				setDllDebug(false);
+			}
+			break;
 		default:
 			serialWriteStr("No case match");
 			serialWriteStr("HELP \
