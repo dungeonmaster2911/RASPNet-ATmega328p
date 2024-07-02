@@ -52,3 +52,14 @@ uint8_t getSelfAddr(){
 void setSelfAddr(uint8_t addr){
 	self_addr = addr;
 }
+
+
+void processNetworkFrame(uint8_t* frame){
+	if(*pSrcAddr(frame)  == getSelfAddr() ){
+		free(frame); // Discard frame after reaching source
+		frame = NULL;
+	}
+	else if(*pDestAddr(frame) == getSelfAddr() || *pDestAddr(frame) == 0){
+		printFrame(frame);
+	}
+}

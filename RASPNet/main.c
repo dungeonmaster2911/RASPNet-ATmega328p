@@ -32,12 +32,26 @@ void handleRecveivedFrame(){
 	ATOMIC_BLOCK(ATOMIC_RESTORESTATE){
 		recv_frame = getRecvFrame();
 	}
-		
+
+	if(recv_frame){
+		processNetworkFrame(recv_frame);
+		if(recv_frame){
+			serialWriteStr("Frame processed by Layer 3");
+			free(recv_frame);
+		}
+		else{
+			serialWriteStr("Frame discarded by Layer 3")
+		}
+	}
+	
+
+	/*
 	if(recv_frame !=NULL){
 		printFrame(recv_frame);
 		free(recv_frame);
 		recv_frame = NULL;
 	}
+	*/	
 }
 
 void checkInput(){

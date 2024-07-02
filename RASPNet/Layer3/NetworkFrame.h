@@ -14,3 +14,5 @@ uint8_t checkDestination(uint8_t* frame) ;
 uint8_t getSelfAddr();
 
 void setSelfAddr(uint8_t addr);
+
+void processNetworkFrame(uint8_t* frame);
