@@ -35,8 +35,7 @@ void createFrameQueue(){
 	}
 	frame_queue = (struct Frame_Queue*)malloc(sizeof(struct Frame_Queue));
 	
-	frame_queue->front = frame_queue->rear = NULL;
-	
+	frame_queue->front = frame_queue->rear = NULL;	
 }
 
 /**

@@ -146,6 +146,7 @@ bool copyFrameToSendBuffer(uint8_t* dll_frame){
 * - The bits are sent in the order -> MSB to LSB 
 */
 void sendDllFrame(){
+		
 	static uint8_t bytes_to_send = 0;
     static uint8_t bytes_sent = 0;
     static uint8_t bits_sent = 0;
@@ -154,27 +155,22 @@ void sendDllFrame(){
     
     if(sending){
         if(bytes_sent < bytes_to_send){
-	    
             uint8_t bit = (*(send_buffer+bytes_sent)>>(7-bits_sent)) & 1 ;
-	
             controlBit(&PORTB,PORTB5,bit);
             if(bits_sent == 7){
-		
-		if(dll_debug){
-		    char* string = (char*)malloc(30*sizeof(char));
-		    sprintf(string, ">> BYTE_%d = %x",bytes_sent,*(send_buffer+bytes_sent));
-		    serialWriteStr(string);
-		    free(string);
-		}
-		
-		bits_sent=0; // reset bit count to 0 after sending 8 bits
-                bytes_sent++;
-		
-            }
+				if(dll_debug){
+					char* string = (char*)malloc(30*sizeof(char));
+					sprintf(string, ">> BYTE_%d = %x",bytes_sent,*(send_buffer+bytes_sent));
+					serialWriteStr(string);
+					free(string);
+				}		
+				
+				bits_sent=0; // reset bit count to 0 after sending 8 bits
+				bytes_sent++;
+			}
             else{
                 bits_sent++;
-            }
-            
+            } 
         }
         else{
             //serialWriteStr("3333333");
@@ -182,7 +178,7 @@ void sendDllFrame(){
             free(send_buffer);
             send_buffer = NULL;
             sending = false;
-	    serialWriteStr(">> END OF SEND");
+	    	serialWriteStr(">> END OF SEND");
         }
     }
     else{
@@ -194,7 +190,7 @@ void sendDllFrame(){
             //bytes_to_send = *(send_buffer+5)+6;
             bytes_to_send = frameSize(send_buffer);
             sending = true;
-	    serialWriteStr(">> START OF SEND");
+	    	serialWriteStr(">> START OF SEND");
         }
         else{
             //serialWriteStr("5555555");
@@ -273,85 +269,82 @@ void recvDllFrame(){
 		//serialWriteStr("Reading data in this part");
 		//preamble_recv = false;
 		if(bit_is_set(PIND,PIND5)){
-                *(recv_buffer+bytes_recv) |= 1;
-            }   
-            else{
-                *(recv_buffer+bytes_recv) &= ~1;
-            }
+            *(recv_buffer+bytes_recv) |= 1;
+        }   
+        else{
+            *(recv_buffer+bytes_recv) &= ~1;
+        }
 
-            if(bits_recv == 7){
-                bits_recv=0; // reset bit count to 0 after sending 8 bits
+        if(bits_recv == 7){
+            bits_recv=0; // reset bit count to 0 after sending 8 bits
 		
-		if(dll_debug){
-		    char* string = (char*)malloc(30*sizeof(char));
-		    sprintf(string, "<< BYTE_%d = %x",bytes_recv,*(recv_buffer+bytes_recv));
-		    serialWriteStr(string);
-		    free(string);
-		}
-		
-		bytes_recv++;
-                *(recv_buffer+bytes_recv) = 0;
-		
+			if(dll_debug){
+		    	char* string = (char*)malloc(30*sizeof(char));
+		    	sprintf(string, "<< BYTE_%d = %x",bytes_recv,*(recv_buffer+bytes_recv));
+		   		serialWriteStr(string);
+				free(string);
+			}
+			bytes_recv++;
+            *(recv_buffer+bytes_recv) = 0;
+        }
+        else{
+            *(recv_buffer+bytes_recv)<<=1;
+            bits_recv++;
+        }
+            
+            
+            
+            
+        if(bytes_recv == (SIZE+1) && !read_payload){ /// - Read Payload size realloc sufficient memory for frame
+                
+            char* string = (char*)malloc(50*sizeof(char));
+            //sprintf(string, "CRC_Byte3=%d CRC_Byte2=%d CRC_Byte1=%d CRC_Byte3=%d \nData_Size=%d",*(recv_buffer),*(recv_buffer+1),*(recv_buffer+2),*(recv_buffer+3),*(recv_buffer+4));
+            sprintf(string, "<< CRC=%lx  \n<< PAYLOAD_SIZE=%d",*((uint32_t*)pCRC(recv_buffer)),*pSize(recv_buffer));
+            serialWriteStr(string);
+            free(string);
+                
+            //free(recv_buffer);
+            //bytes_recv = 0;
+            //preamble = false;
+                
+            //Reallocate Memory for recv_buffer based on payload size
+            //recv_buffer_size = 5+*(recv_buffer+4);
+            void * tmp = realloc(recv_buffer,frameSize(recv_buffer)*sizeof(uint8_t));
+            if(tmp !=NULL){
+                recv_buffer = tmp;
+                read_payload = true;
             }
             else{
-                *(recv_buffer+bytes_recv)<<=1;
-                bits_recv++;
+                // Reallocation failed, stop reading frame
+                //serialWriteStr("Realloc failed !!");
+                free(recv_buffer);
+                bytes_recv = 0;
+                bits_recv = 0;
+                preamble_recv = false;
             }
-            
-            
-            
-            
-            if(bytes_recv == (SIZE+1) && !read_payload){ /// - Read Payload size realloc sufficient memory for frame
-                
-                char* string = (char*)malloc(50*sizeof(char));
-                //sprintf(string, "CRC_Byte3=%d CRC_Byte2=%d CRC_Byte1=%d CRC_Byte3=%d \nData_Size=%d",*(recv_buffer),*(recv_buffer+1),*(recv_buffer+2),*(recv_buffer+3),*(recv_buffer+4));
-                sprintf(string, "<< CRC=%lx  \n<< PAYLOAD_SIZE=%d",*((uint32_t*)pCRC(recv_buffer)),*pSize(recv_buffer));
-                serialWriteStr(string);
-                free(string);
-                
-                //free(recv_buffer);
-                //bytes_recv = 0;
-                //preamble = false;
-                
-                //Reallocate Memory for recv_buffer based on payload size
-                //recv_buffer_size = 5+*(recv_buffer+4);
-                void * tmp = realloc(recv_buffer,frameSize(recv_buffer)*sizeof(uint8_t));
-                if(tmp !=NULL){
-                    recv_buffer = tmp;
-                    read_payload = true;
-                }
-                else{
-                    // Reallocation failed, stop reading frame
-                    //serialWriteStr("Realloc failed !!");
-                    free(recv_buffer);
-                    bytes_recv = 0;
-                    bits_recv = 0;
-                    preamble_recv = false;
-                }
-            }
+        }
 	    else if(bytes_recv == (SRC_ADDR+1) && bits_recv == 0){ /// - Check if Frame needs to be forwarded or not
 	    
-		    
 		    char* string = (char*)malloc(50*sizeof(char));
 		    sprintf(string, "<< DEST_ADDR = %d  \n<< SRC_ADDR = %d",*pDestAddr(recv_buffer),*pSrcAddr(recv_buffer));
 		    serialWriteStr(string);
 		    free(string);
 		    
 		    if(checkDestination(recv_buffer)){
-			serialWriteStr("<< FORWARD");
-			forward = addFrameToQueue(NULL);
-			add_data_to_forward_frame = true;
+				serialWriteStr("<< FORWARD");
+				forward = addFrameToQueue(NULL);
+				add_data_to_forward_frame = true;
 		    }
 		    else{
-			serialWriteStr("<< SELF");
+				serialWriteStr("<< SELF");
 		    }
 	    }
 	    else if(read_payload && bytes_recv == frameSize(recv_buffer)){ /// - Process after reading the complete frame
-		serialWriteStr("<< RECV COMPLETE");
-		bytes_recv = 0;
-		bits_recv= 0;
-		read_payload = false;
-		preamble_recv = false;
+			serialWriteStr("<< RECV COMPLETE");
+			bytes_recv = 0;
+			bits_recv= 0;
+			read_payload = false;
+			preamble_recv = false;
                 
                 //ATOMIC_BLOCK(ATOMIC_RESTORESTATE){
 		    if(add_data_to_forward_frame){
@@ -365,7 +358,6 @@ void recvDllFrame(){
 				if(dll_debug){
 				    printFrame(forward->frame);
 				}
-				
 				forward = NULL;
 		    }
 		    else{
