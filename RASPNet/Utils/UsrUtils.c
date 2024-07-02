@@ -76,7 +76,7 @@ uint8_t* createFrame(uint8_t* payload, uint8_t payload_len){
 * @param uint8_t* frame pointer to the loaded frame
 */
 void printFrame(uint8_t* frame){
-        ATOMIC_BLOCK(ATOMIC_RESTORESTATE){
+
         serialWriteStr("\n\n\n++++++++++FRAME START++++++++++");
         char* string = (char*)malloc(40*sizeof(char));
         
@@ -131,7 +131,6 @@ void printFrame(uint8_t* frame){
         
         free(string);
         serialWriteStr("----------FRAME END----------\n\n\n");
-        }
 }
 
 /**
