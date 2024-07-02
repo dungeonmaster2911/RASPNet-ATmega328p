@@ -10,8 +10,9 @@
 #include <stdio.h>
 
 // Defining Necessary macros for USART 
-#define USART_BAUDRATE 9600 /// Desired Baud Rate
+#define USART_BAUDRATE 38400 /// Desired Baud Rate
 #define BAUD_PRESCALER (((F_CPU / (USART_BAUDRATE * 16UL))) - 1)
+
 
 #define ASYNCHRONOUS (0<<UMSEL00) /// USART Mode Selection
 

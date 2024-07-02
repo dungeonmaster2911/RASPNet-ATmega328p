@@ -178,7 +178,7 @@ void sendDllFrame(){
             free(send_buffer);
             send_buffer = NULL;
             sending = false;
-	    	serialWriteStr(">> END OF SEND");
+	    	serialWriteStr(">> FINISHED SENDING\n\n\n");
         }
     }
     else{
@@ -190,7 +190,11 @@ void sendDllFrame(){
             //bytes_to_send = *(send_buffer+5)+6;
             bytes_to_send = frameSize(send_buffer);
             sending = true;
-	    	serialWriteStr(">> START OF SEND");
+	    for(int i=0;i<*pSize(send_buffer);i++){
+		    serialWrite(*(pPayload(send_buffer)+i));
+	    }
+	    //serialWrite('\n');
+	    serialWriteStr(" >> START SENDING");
         }
         else{
             //serialWriteStr("5555555");
@@ -230,7 +234,7 @@ void checkPreambleRecv(){
 	//free(string);
         
             
-	if(preamble_buffer==0b01111110){
+	if(preamble_buffer==preamble){
 		serialWriteStr("<< PREAMBLE MATCH");
 		preamble_recv = true; /// - Set Global variable `preamble_recv` if received bits match the preample pattern
 		preamble_buffer = 0;
@@ -251,7 +255,6 @@ void recvDllFrame(){
 	static uint8_t bytes_recv = 0;
 	static uint8_t bits_recv = 0;
 	static bool read_payload = false;
-	static uint8_t recv_buffer_size = 0;
 	static bool add_data_to_forward_frame = false;
 	static struct Node* forward = NULL;
 	
@@ -262,7 +265,7 @@ void recvDllFrame(){
 		if(recv_buffer == NULL){
 			recv_buffer = (uint8_t*)malloc(PAYLOAD*sizeof(uint8_t));
 			
-			*recv_buffer = 0b01111110;
+			*recv_buffer = preamble;
 			bytes_recv++;
 		}
 		

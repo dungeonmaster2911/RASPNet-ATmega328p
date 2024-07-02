@@ -23,6 +23,8 @@ all: dependency $(PRG).elf $(PRG).hex
 f : dependency $(PRG).elf $(PRG).hex flash
 
 dependency :
+
+	$(CC) $(CFLAGS) -c $(SRC)/Layer1/ISR_Clock_Data.c -o ISR_Clock_Data.o
 	$(CC) $(CFLAGS) -c $(SRC)/Layer2/DllFrame.c -o DllFrame.o
 	$(CC) $(CFLAGS) -c $(SRC)/UART/UARTSetup.c -o UARTSetup.o
 	$(CC) $(CFLAGS) -c $(SRC)/RASPNetPinConfig.c -o RASPNetPinConfig.o 
@@ -34,7 +36,7 @@ dependency :
 	$(CC) $(CFLAGS) -c $(SRC)/PiAtmegaAPI/PiAtmegaAPI.c -o PiAtmegaAPI.o
 	$(CC) $(CFLAGS) -c $(SRC)/main.c -o main.o
 
-$(PRG).elf: $(PRG).o DllFrame.o UARTSetup.o RASPNetPinConfig.o Custom_CRC32.o TimerConfig.o UsrUtils.o NetworkFrame.o Frame_Queue.o PiAtmegaAPI.o
+$(PRG).elf: $(PRG).o DllFrame.o UARTSetup.o RASPNetPinConfig.o Custom_CRC32.o TimerConfig.o UsrUtils.o NetworkFrame.o Frame_Queue.o PiAtmegaAPI.o ISR_Clock_Data.o
 	$(CC) $(CFLAGS) -o $@ $^ $(LIBS) 
 
 # dependency:

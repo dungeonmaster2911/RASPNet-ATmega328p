@@ -5,6 +5,7 @@
 
 #include "UsrUtils.h"
 #include <stdlib.h>
+#include <util/atomic.h>
 #include "../UART/UARTSetup.h"
 #include "../CRC/Custom_CRC32.h"
 
@@ -50,20 +51,20 @@ uint8_t* createFrame(uint8_t* payload, uint8_t payload_len){
         *temp = 0; /// - Add Identifaction value to frame
         
         temp = pFlags(frame);
-        *temp = 1; /// - Add flag value to frame
+        *temp = 0; /// - Add flag value to frame
         
         temp = pDestAddr(frame);
-        *temp = 2;
+        *temp = 255;
         
         temp = pSrcAddr(frame);
-        *temp = 3;
+        *temp = 255;
         
         
         crc32(pCRC(frame),payload,payload_len); /// - Add CRC value to frame
         
         *pSize(frame) = payload_len; /// - Add Payload length value to frame
-        serialWriteStr("test");
-        serialWriteStr((char*)payload);
+        //serialWriteStr("test");
+        //serialWriteStr((char*)payload);
         memcpy(pPayload(frame),payload,payload_len); /// - Add Payload to frame
 
         return frame;
@@ -75,6 +76,8 @@ uint8_t* createFrame(uint8_t* payload, uint8_t payload_len){
 * @param uint8_t* frame pointer to the loaded frame
 */
 void printFrame(uint8_t* frame){
+        ATOMIC_BLOCK(ATOMIC_RESTORESTATE){
+        serialWriteStr("\n\n\n++++++++++FRAME START++++++++++");
         char* string = (char*)malloc(40*sizeof(char));
         
         if(pPreamble(frame)){
@@ -112,12 +115,12 @@ void printFrame(uint8_t* frame){
         }
         
         if(pSize(frame)){
-                sprintf(string, "Size = %d",*pSize(frame));
+                sprintf(string, "SIZE = %d",*pSize(frame));
                 serialWriteStr(string);
         }
         
         if(pPayload(frame)){
-                serialWrite('\n');
+                serialWriteStr("PAYLOAD");
                 for(int i=0;i<*pSize(frame);i++){
                         //sprintf(string, "Data_BY_%d  CHAR = %c INT = %d",i,*(pPayload(frame)+i),*(pPayload(frame)+i));
                         //serialWriteStr(string);
@@ -127,6 +130,8 @@ void printFrame(uint8_t* frame){
         }
         
         free(string);
+        serialWriteStr("----------FRAME END----------\n\n\n");
+        }
 }
 
 /**

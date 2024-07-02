@@ -1,12 +1,17 @@
 #include "ISR_Clock_Data.h"
 #include "../Layer2/DllFrame.h"
 #include "../Utils/UsrUtils.h"
+
+
+static bool enable_comm = true;
+
 /**
 * @brief Layer 1 Clock
 * 
 * **Further Details**
 */
 ISR(TIMER1_COMPA_vect){
+    if(!enable_comm){return;}
     //Variable to implement phase shift
     static bool phase = false;
     
@@ -27,5 +32,12 @@ ISR(TIMER1_COMPA_vect){
 * **Further Details**
 */
 ISR(PCINT2_vect){
-	recvDllFrame();
+    if(!enable_comm){return;}
+    recvDllFrame();
+}
+
+
+
+void setCommEnable(bool enable){
+    enable_comm = enable;
 }

@@ -4,6 +4,7 @@
 #include "../Layer2/DllFrame.h"
 #include "../Layer3/NetworkFrame.h"
 #include "../FrameQueue/Frame_Queue.h"
+#include "../Layer1/ISR_Clock_Data.h"
 
 void parseCmdFromPi(const char* cmd_str){
 	
@@ -90,13 +91,26 @@ void parseCmdFromPi(const char* cmd_str){
 				setDllDebug(false);
 			}
 			break;
+		case 'I':
+			sscanf(cmd_str,"I %d",&read_int);
+			if(read_int == 1){
+				setCommEnable(true);
+			}
+			else{
+				setCommEnable(false);
+			}
+			break;
+			
 		default:
 			serialWriteStr("No case match");
 			serialWriteStr("HELP \
 							\nSelf address value (1-255) --> A xx\
 							\nPayload message (max length 255 characters) --> D xyz\
 							\nDestination address value (0-255) --> B xx\
-							\nSend the message --> P");
+							\nSend the message --> P\
+							\nSend Test messages (1-6)--> X xx\
+							\nEnable/Disable Verbose logs -->V 1 / V 0\
+							\nEnable/Disable Communication -->I 1 / I 0");
 			break;
 	}
 	

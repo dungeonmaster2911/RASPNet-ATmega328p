@@ -20,6 +20,7 @@
 #include "Layer3/NetworkFrame.h"
 #include "FrameQueue/Frame_Queue.h"
 #include "PiAtmegaAPI/PiAtmegaAPI.h"
+#include "Layer1/ISR_Clock_Data.h"
 
 
 char* payload = "ABCD";
@@ -31,17 +32,18 @@ void handleRecveivedFrame(){
 	
 	ATOMIC_BLOCK(ATOMIC_RESTORESTATE){
 		recv_frame = getRecvFrame();
-	}
-
+	//}
+	
 	if(recv_frame){
-		processNetworkFrame(recv_frame);
+		recv_frame = processNetworkFrame(recv_frame);
 		if(recv_frame){
 			serialWriteStr("Frame processed by Layer 3");
 			free(recv_frame);
 		}
 		else{
-			serialWriteStr("Frame discarded by Layer 3")
+			serialWriteStr("Frame discarded by Layer 3");
 		}
+	}
 	}
 	
 
@@ -51,7 +53,8 @@ void handleRecveivedFrame(){
 		free(recv_frame);
 		recv_frame = NULL;
 	}
-	*/	
+	*/
+		
 }
 
 void checkInput(){
@@ -74,48 +77,9 @@ int main(){
 	
 	
 	while(true){
-		
-		
 		checkInput();
 		handleRecveivedFrame();
     }
 	return 0;
 }
-
-
-/**
-* @brief Layer 1 Clock
-* 
-* **Further Details**
-*/
-ISR(TIMER1_COMPA_vect){
-    //Variable to implement phase shift
-    static bool phase = false;
-    
-    //basically divides the timer clock by 2
-    if(phase){
-		controlBit(&PORTB,PORTB4,!bit_is_set(PINB,PINB4));
-		controlBit(&PORTB,PORTB0,bit_is_set(PIND,PIND4));
-		
-	}
-	else{
-		sendDllFrame();
-	}
-	
-	phase = !phase;
-    
-}
-
-/**
-* @brief Layer 1 Data
-* 
-* **Further Details**
-*/
-ISR(PCINT2_vect){
-	recvDllFrame();
-}
-
-
-
-
 
