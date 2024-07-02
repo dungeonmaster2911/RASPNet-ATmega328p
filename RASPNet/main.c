@@ -32,7 +32,7 @@ void handleRecveivedFrame(){
 	
 	ATOMIC_BLOCK(ATOMIC_RESTORESTATE){
 		recv_frame = getRecvFrame();
-	//}
+	}
 	
 	if(recv_frame){
 		recv_frame = processNetworkFrame(recv_frame);
@@ -44,7 +44,7 @@ void handleRecveivedFrame(){
 			serialWriteStr("Frame discarded by Layer 3");
 		}
 	}
-	}
+	
 	
 
 	/*

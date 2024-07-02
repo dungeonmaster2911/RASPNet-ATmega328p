@@ -86,18 +86,22 @@ void parseCmdFromPi(const char* cmd_str){
 			sscanf(cmd_str,"V %d",&read_int);
 			if(read_int == 1){
 				setDllDebug(true);
+				serialWriteStr("Verbose logs enabled");
 			}
 			else{
 				setDllDebug(false);
+				serialWriteStr("Verbose logs disabled");
 			}
 			break;
 		case 'I':
 			sscanf(cmd_str,"I %d",&read_int);
 			if(read_int == 1){
 				setCommEnable(true);
+				serialWriteStr("Communication enabled");
 			}
 			else{
 				setCommEnable(false);
+				serialWriteStr("Communication disabled");
 			}
 			break;
 			

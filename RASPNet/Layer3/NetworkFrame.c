@@ -59,7 +59,7 @@ uint8_t* processNetworkFrame(uint8_t* frame){
 		free(frame); // Discard frame after reaching source
 		frame = NULL;
 	}
-	else if(*pDestAddr(frame) == getSelfAddr() || *pDestAddr(frame) == 0){
+	else if((*pDestAddr(frame) == getSelfAddr()) || (*pDestAddr(frame) == 0)){
 		printFrame(frame);
 	}
 	return frame;

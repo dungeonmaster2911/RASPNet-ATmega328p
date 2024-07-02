@@ -355,7 +355,7 @@ void recvDllFrame(){
 				memcpy(forward_frame,recv_buffer,frameSize(recv_buffer));
 				add_data_to_forward_frame = false;
 				serialWriteStr("<< ADDED FORWARD FRAME TO QUEUE");
-				printFrame(forward_frame);
+				if(dll_debug){printFrame(forward_frame);}
 				//addFrameToQueue(forward_frame);
 				forward->frame = forward_frame;
 				if(dll_debug){
@@ -363,7 +363,7 @@ void recvDllFrame(){
 				}
 				forward = NULL;
 		    }
-		    else{
+		    //else{
 			
 				uint8_t* crc_comp = (uint8_t*)malloc(4*sizeof(uint8_t));						
 				crc32(crc_comp,pPayload(recv_buffer),*pSize(recv_buffer));
@@ -383,7 +383,7 @@ void recvDllFrame(){
 					printFrame(recv_buffer);
 				    }
 				}
-		    }
+		    //}
             free(recv_buffer);
             recv_buffer = NULL;
         }
