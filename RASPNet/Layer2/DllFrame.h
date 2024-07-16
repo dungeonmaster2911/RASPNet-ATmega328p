@@ -5,9 +5,8 @@
 #include <stdio.h>
 #include <string.h>
 
-uint8_t* createDllFrame(uint8_t* payload, uint8_t payload_len);
 
-void printFrameToSerial(uint8_t* dll_frame);
+void addDllHeaders(uint8_t* frame,uint8_t* payload, uint8_t payload_len);
 
 bool copyFrameToSendBuffer(uint8_t* dll_frame);
 

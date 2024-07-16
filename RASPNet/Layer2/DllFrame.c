@@ -39,76 +39,16 @@ static bool preamble_recv = false;
 
 
 /**
-* @brief TO BE REMOVED
+* @brief This function add the frame fields related to Data Link Layer.
+* 
+* **Further Details**
+* - The send_buffer is set to null once the frame is transmitted.
 */
-uint8_t* createDllFrame(uint8_t* payload, uint8_t payload_len){
-    // Allocate memory for buffer
-    // 1 byte preamble, 4 bytes CRC, 1 byte size, n byte of data length
-    
-    //uint8_t data_buf_len = strlen(data_buf);
-    
-    //frame_size = 6+data_buf_len;
-    
-    uint8_t* dll_frame = (uint8_t*)malloc((6+payload_len)*sizeof(uint8_t));
-    
-    //Copy preamble to frame
-    *dll_frame = preamble;
-    
-    //Copy CRC to frame
-    crc32(dll_frame+1,payload,payload_len);
-    /*
-    *(dll_frame+1) = CRC>>24; //Bit[31:24]
-    *(dll_frame+2) = CRC>>16; //Bit[23:16]
-    *(dll_frame+3) = CRC>>8; //Bit[15:8]
-    *(dll_frame+4) = CRC; //Bit[7:0]
-    */
-    
-    //Copy data size to frame 
-    *(dll_frame+5) = payload_len;
-    
-    //Copy payload to frame 
-    memcpy(dll_frame+6,payload,payload_len);
-    printFrameToSerial(dll_frame+1);
-    return dll_frame;
+void addDllHeaders(uint8_t* frame,uint8_t* payload, uint8_t payload_len){
+	crc32(pCRC(frame),payload,payload_len); /// - Add CRC value to frame
+	*pSize(frame) = payload_len; /// - Add Payload length value to frame
+	memcpy(pPayload(frame),payload,payload_len); /// - Add Payload to frame	
 }
-
-/**
-* @brief TO BE REMOVED
-*/
-void printFrameToSerial(uint8_t* dll_frame){
-	
-	if(dll_frame == NULL){
-		serialWriteStr("NULL FRAME !!!");
-		return;
-	
-	}	
-	char* string = (char*)malloc(40*sizeof(char));
-    
-    //sprintf(string, "PREAMBLE=%d",*dll_frame);
-    //serialWriteStr(string);
-    
-    sprintf(string, "CRC=%lx",*((uint32_t*)(dll_frame)));
-    serialWriteStr(string);
-    /*
-    sprintf(string, "CRC_BY2=%d",*(dll_frame+2));
-    serialWriteStr(string);
-    
-    sprintf(string, "CRC_BY1=%d",*(dll_frame+3));
-    serialWriteStr(string);
-    
-    sprintf(string, "CRC_BY0=%d",*(dll_frame+4));
-    serialWriteStr(string);
-    */
-    sprintf(string, "payload_len=%d",*(dll_frame+4));
-    serialWriteStr(string);
-    
-    for(int i=0;i<*(dll_frame+4);i++){
-		sprintf(string, "Data_BY_%d  CHAR = %c INT = %d",*(dll_frame+4)-i,*(dll_frame+5+i),*(dll_frame+5+i));
-		serialWriteStr(string);
-	}    
-    free(string);
-}
-
 
 /**
 * @brief This function copies a frame to the send_buffer only if send buffer is not NULL.

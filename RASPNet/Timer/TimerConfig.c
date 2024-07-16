@@ -11,12 +11,13 @@
 */
 void timerInit(){
 
-    /// - Set OCRA value for desired clock frequency
-    //OCR1A = 62499; //frequency of 1 second
-    //OCR1A = 31249; // frequency of 0.5 second
-    //OCR1A = 15624; // frequency of 0.25 second
+    /// - Set OCRA value for desired timer frequency
+    /// - RASPNet Clock = 2 * Timer (Due to phase shift logic)
+    //OCR1A = 62499; //timer of 1 seconds
+    //OCR1A = 31249; // timer of 0.5 seconds
+    //OCR1A = 15624; // timer of 0.25 seconds
     //OCR1A = 6000;
-    OCR1A = 1400; // frequency of 0.30second
+    OCR1A = 1400; /// - Timer of 0.30 seconds (Communication Clock = 2*Timer)
 
     /// - Set clock prescalar 256
     TCCR1B |= (1 << CS02);        
