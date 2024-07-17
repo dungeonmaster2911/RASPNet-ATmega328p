@@ -44,23 +44,36 @@ uint8_t checkDestination(uint8_t* frame){
 	return ret_val; ///@return 0 = No need to forward the frame OR 1 = Need to forward the frame
 }
 
-
+/**
+* @brief Returns the address of the device
+*
+* @return uint8_t self_addr 
+*/
 uint8_t getSelfAddr(){
 	return self_addr;
 }
 
+/**
+* @brief Change the default device address
+*
+* @param uint8_t value with new address 
+*/
 void setSelfAddr(uint8_t addr){
 	self_addr = addr;
 }
 
-
+/**
+* @brief Process the received frame at layer 3
+*
+* @param uint8_t* pointer to the received frame. 
+*/
 uint8_t* processNetworkFrame(uint8_t* frame){
-	if(*pSrcAddr(frame)  == getSelfAddr() ){
-		free(frame); // Discard frame after reaching source
+	if(*pSrcAddr(frame)  == getSelfAddr()){
+		free(frame); /// Discard frame after reaching source
 		frame = NULL;
 	}
 	else if((*pDestAddr(frame) == getSelfAddr()) || (*pDestAddr(frame) == 0)){
 		printFrame(frame);
 	}
-	return frame;
+	return frame;/// @return uint8_t* pointer to the received frame, set to NULL if frame need to be discarded. 
 }

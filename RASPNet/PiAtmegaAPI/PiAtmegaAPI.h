@@ -7,6 +7,6 @@
 
 
 
-
+void checkCmdFromPi();
 void parseCmdFromPi(const char* cmd_str);
 void sendTestMsg(uint8_t c);

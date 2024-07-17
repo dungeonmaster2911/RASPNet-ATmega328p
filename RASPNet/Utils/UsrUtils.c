@@ -39,19 +39,20 @@ void controlBit(volatile uint8_t* reg,uint8_t pin,bool val){
 * @brief Creates a complete frame.
 * 
 * **Further Details**
+* Creates and allocates a new frame with suffcient memory
 */
 uint8_t* createFrame(uint8_t* payload, uint8_t payload_len){
         uint8_t* frame = (uint8_t*)malloc((PAYLOAD+payload_len)*sizeof(uint8_t));
         uint8_t* temp;
        
         temp = pPreamble(frame);
-        *temp = 0b01111110; /// - Add Preamble value to frame
+        *temp = 0b01111110; // Add Preamble value to frame
         
         temp = pIdentification(frame);
-        *temp = 0; /// - Add Identifaction value to frame
+        *temp = 0; // Add Identifaction value to frame
         
         temp = pFlags(frame);
-        *temp = 0; /// - Add flag value to frame
+        *temp = 0; // Add flag value to frame
         
         temp = pDestAddr(frame);
         *temp = 255;
@@ -59,15 +60,7 @@ uint8_t* createFrame(uint8_t* payload, uint8_t payload_len){
         temp = pSrcAddr(frame);
         *temp = 255;
         
-        
-        crc32(pCRC(frame),payload,payload_len); /// - Add CRC value to frame
-        
-        *pSize(frame) = payload_len; /// - Add Payload length value to frame
-        //serialWriteStr("test");
-        //serialWriteStr((char*)payload);
-        memcpy(pPayload(frame),payload,payload_len); /// - Add Payload to frame
-
-        return frame;
+        return frame;/// @return uint8_t* pointer to the created frame
 }
 
 /**
@@ -122,8 +115,6 @@ void printFrame(uint8_t* frame){
         if(pPayload(frame)){
                 serialWriteStr("PAYLOAD");
                 for(int i=0;i<*pSize(frame);i++){
-                        //sprintf(string, "Data_BY_%d  CHAR = %c INT = %d",i,*(pPayload(frame)+i),*(pPayload(frame)+i));
-                        //serialWriteStr(string);
                         serialWrite(*(pPayload(frame)+i));
                 }
                 serialWrite('\n');    

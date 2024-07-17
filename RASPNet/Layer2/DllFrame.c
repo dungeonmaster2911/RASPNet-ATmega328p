@@ -10,105 +10,53 @@
 #include "../Layer3/NetworkFrame.h"
 #include "../FrameQueue/Frame_Queue.h"
 
-//#define DLL_DEBUG
-
-
+/// Position for Preamble field in frame 
 #define PREAMBLE 0
+/// Position for Identification field in frame
 #define IDENTIFICATION 8
+/// Position for Flag field in frame
 #define FLAGS 9
+/// Position for Destination address field in frame
 #define DEST_ADDR 6
+/// Position for Source address field in frame
 #define SRC_ADDR 7
+/// Position for CRC field in frame
 #define CRC 1
+/// Position for Size field in frame
 #define SIZE 5
+/// Position for Payloaad field in frame
 #define PAYLOAD 10
 
 
+/// @brief  If true, program will give verbose prints for send and receive
 static bool dll_debug = false;
+
+/// @brief Stores the Preamble value
 static uint8_t preamble = 0b01111110;
 
-//static uint32_t CRC = 0xFFFFFFFF;
-
+/// @brief Intended frame to be transmitted is loaded to send_buffer
 static uint8_t* send_buffer = NULL;
 
+/// @brief When receiving is ongoing data is stored in recv_buffer
 static uint8_t* recv_buffer = NULL;
 
-uint8_t* received_frame = NULL;
+/// @brief After receiving is completed, full frame is copied to received_frame, so the program can start to receive the next frame if available
+static uint8_t* received_frame = NULL;
 
-
+/// @brief Set to if preamble is received
 static bool preamble_recv = false;
 
 
 /**
-* @brief TO BE REMOVED
+* @brief This function add the frame fields related to Data Link Layer.
+* 
+* **Further Details**
 */
-uint8_t* createDllFrame(uint8_t* payload, uint8_t payload_len){
-    // Allocate memory for buffer
-    // 1 byte preamble, 4 bytes CRC, 1 byte size, n byte of data length
-    
-    //uint8_t data_buf_len = strlen(data_buf);
-    
-    //frame_size = 6+data_buf_len;
-    
-    uint8_t* dll_frame = (uint8_t*)malloc((6+payload_len)*sizeof(uint8_t));
-    
-    //Copy preamble to frame
-    *dll_frame = preamble;
-    
-    //Copy CRC to frame
-    crc32(dll_frame+1,payload,payload_len);
-    /*
-    *(dll_frame+1) = CRC>>24; //Bit[31:24]
-    *(dll_frame+2) = CRC>>16; //Bit[23:16]
-    *(dll_frame+3) = CRC>>8; //Bit[15:8]
-    *(dll_frame+4) = CRC; //Bit[7:0]
-    */
-    
-    //Copy data size to frame 
-    *(dll_frame+5) = payload_len;
-    
-    //Copy payload to frame 
-    memcpy(dll_frame+6,payload,payload_len);
-    printFrameToSerial(dll_frame+1);
-    return dll_frame;
+void addDllHeaders(uint8_t* payload, uint8_t payload_len, uint8_t* frame){
+	crc32(pCRC(frame),payload,payload_len); /// - Add CRC value to frame
+	*pSize(frame) = payload_len; /// - Add Payload length value to frame
+	memcpy(pPayload(frame),payload,payload_len); /// - Add Payload to frame	
 }
-
-/**
-* @brief TO BE REMOVED
-*/
-void printFrameToSerial(uint8_t* dll_frame){
-	
-	if(dll_frame == NULL){
-		serialWriteStr("NULL FRAME !!!");
-		return;
-	
-	}	
-	char* string = (char*)malloc(40*sizeof(char));
-    
-    //sprintf(string, "PREAMBLE=%d",*dll_frame);
-    //serialWriteStr(string);
-    
-    sprintf(string, "CRC=%lx",*((uint32_t*)(dll_frame)));
-    serialWriteStr(string);
-    /*
-    sprintf(string, "CRC_BY2=%d",*(dll_frame+2));
-    serialWriteStr(string);
-    
-    sprintf(string, "CRC_BY1=%d",*(dll_frame+3));
-    serialWriteStr(string);
-    
-    sprintf(string, "CRC_BY0=%d",*(dll_frame+4));
-    serialWriteStr(string);
-    */
-    sprintf(string, "payload_len=%d",*(dll_frame+4));
-    serialWriteStr(string);
-    
-    for(int i=0;i<*(dll_frame+4);i++){
-		sprintf(string, "Data_BY_%d  CHAR = %c INT = %d",*(dll_frame+4)-i,*(dll_frame+5+i),*(dll_frame+5+i));
-		serialWriteStr(string);
-	}    
-    free(string);
-}
-
 
 /**
 * @brief This function copies a frame to the send_buffer only if send buffer is not NULL.
@@ -118,32 +66,21 @@ void printFrameToSerial(uint8_t* dll_frame){
 */
 bool copyFrameToSendBuffer(uint8_t* dll_frame){
 	if(send_buffer == NULL){
-		
-		//uint8_t frame_size = *(dll_frame+5)+6;
-		
 		send_buffer = (uint8_t*)malloc(frameSize(dll_frame)*sizeof(uint8_t));
 		memcpy(send_buffer,dll_frame,frameSize(dll_frame));
 		//printFrame(send_buffer);
-		
-		//send_buffer = (uint8_t*)malloc(frame_size*sizeof(uint8_t));
-		//memcpy(send_buffer,dll_frame,frame_size);
-		
-		
-		//serialWriteStr("frame copied to send_buffer");
-		//printFrameToSerial(send_buffer);
 		return true;
 	}
 	else{
-		serialWriteStr("send buffer not empty");
+		serialWriteStr("ERROR: send buffer not empty");
 		return false;
 	}
 }
 
-
 /**
-* @brief This function is responsible to transmit each bit of the frame stored in "send_buffer"
+* @brief This function is responsible to transmit each bit of the frame 
+* stored in "send_buffer"
 * **Further Details**
-* - The bits are sent in the order -> MSB to LSB 
 */
 void sendDllFrame(){
 	
@@ -151,21 +88,23 @@ void sendDllFrame(){
 	static uint8_t bytes_sent = 0;
 	static uint8_t bits_sent = 0;
 	static bool sending = false;
-	//serialWriteStr("11111111");
-
+	/// If currently sending a frame
 	if(sending){
-		if(bytes_sent < bytes_to_send){
-			uint8_t bit = (*(send_buffer+bytes_sent)>>(7-bits_sent)) & 1 ;
-			controlBit(&PORTB,PORTB5,bit);
-			if(bits_sent == 7){
-				if(dll_debug){
+		if(bytes_sent < bytes_to_send){ 
+			/// - For each byte send send bit MSB -> LSB
+			uint8_t bit = (*(send_buffer+bytes_sent)>>(7-bits_sent))&1; /// - Rerieve each bit from current byte
+			controlBit(&PORTB,PORTB5,bit); /// - Reflect bit value on Data Send pin
+			if(bits_sent == 7){ // Check if all bits (8) of the byte are sent
+				// Debug print: Raw hex value for each sent byte
+				if(dll_debug){	
 					char* string = (char*)malloc(30*sizeof(char));
-					sprintf(string, ">> BYTE_%d = %x",bytes_sent,*(send_buffer+bytes_sent));
+					sprintf(string, ">> BYTE_%d = %x",
+							bytes_sent,
+							*(send_buffer+bytes_sent));
 					serialWriteStr(string);
 					free(string);
 				}		
-				
-				bits_sent=0; // reset bit count to 0 after sending 8 bits
+				bits_sent=0; // Reset Bit count to 0
 				bytes_sent++;
 			}
 			else{
@@ -173,34 +112,34 @@ void sendDllFrame(){
 			} 
 		}
 		else{
-			//serialWriteStr("3333333");
-			// All bytes sent
+			/// When frame is sent completely, empty send_buffer
 			free(send_buffer);
 			send_buffer = NULL;
 			sending = false;
 			serialWriteStr(">> FINISHED SENDING\n\n\n");
 		}
 	}
+	/// If currently not sending a frame
 	else{
 		if(send_buffer != NULL){
-			//serialWriteStr("444444");
-			// new frame to send
+			/// - Check if send buffer is loaded 
 			bytes_sent = 0;
 			bits_sent = 0;
-			//bytes_to_send = *(send_buffer+5)+6;
 			bytes_to_send = frameSize(send_buffer);
 			sending = true;
+			
+			/* Notify user by printning the paylod data being sent when 
+			 * starting to send
+			 */
 			for(int i=0;i<*pSize(send_buffer);i++){
 				serialWrite(*(pPayload(send_buffer)+i));
 			}
-			//serialWrite('\n');
 			serialWriteStr(" >> START SENDING");
 		}
 		else{
-			//serialWriteStr("5555555");
-			// Nothing to send, force data bit to 0
+			/// - If Nothing to send, force data send bit to 0
 			controlBit(&PORTB,PORTB5,0);
-			//Check if there is a frame to send
+			/// - Check if there is a frame to send in the frameQueue
 			struct Node* node = peekFrameFromQueue();
 			if(node!=NULL && node->frame != NULL){
 				node = getFrameFromQueue();
@@ -211,8 +150,6 @@ void sendDllFrame(){
 		}
 	}
 }
-
-
 
 /**
 * @brief Check if the received bits match the preample pattern (01111110)
@@ -228,14 +165,10 @@ void checkPreambleRecv(){
 	else{
 		preamble_buffer &= ~1;
 	}
-	//char* string = (char*)malloc(40*sizeof(char));
-	//sprintf(string, "Preamble=%d ",preamble_buffer);
-	//serialWriteStr(string);
-	//free(string);
 
 	if(preamble_buffer==preamble){
 		serialWriteStr("<< PREAMBLE MATCH");
-		preamble_recv = true; /// - Set Global variable `preamble_recv` if received bits match the preample pattern
+		preamble_recv = true; /// - Set Global variable `preamble_recv`if received bits match the preample pattern
 		preamble_buffer = 0;
 	}
 	else{
@@ -259,23 +192,28 @@ void recvDllFrame(){
 	if(!preamble_recv){
 		checkPreambleRecv();
 	}
+	/// If already received preamble
 	else{
+		/// - Check if recv buffer is null, allocate memory and add preamble
 		if(recv_buffer == NULL){
 			recv_buffer = (uint8_t*)malloc(PAYLOAD*sizeof(uint8_t));
 			*recv_buffer = preamble;
 			bytes_recv++;
 		}
-		//serialWriteStr("Reading data in this part");
-		//preamble_recv = false;
+		
+		///  - Read bit value on Data IN pin and store to current byte
 		if(bit_is_set(PIND,PIND5)){
 			*(recv_buffer+bytes_recv) |= 1;
 		}   
 		else{
 			*(recv_buffer+bytes_recv) &= ~1;
 		}
+		
+		// Check if all bits of a byte are received
 		if(bits_recv == 7){
-			bits_recv=0; // reset bit count to 0 after sending 8 bits
-
+			bits_recv=0; // Reset recv bit count to 0 
+			
+			// Debug print: Raw hex value for each received byte
 			if(dll_debug){
 				char* string = (char*)malloc(30*sizeof(char));
 				sprintf(string, "<< BYTE_%d = %x",bytes_recv,*(recv_buffer+bytes_recv));
@@ -283,26 +221,23 @@ void recvDllFrame(){
 				free(string);
 			}
 			bytes_recv++;
+			//Clear the next byte value to avoid garbage
 			*(recv_buffer+bytes_recv) = 0;
 		}
 		else{
 			*(recv_buffer+bytes_recv)<<=1;
 			bits_recv++;
 		}
+		
+		/// Check for SIZE field of the frame
 		if(bytes_recv == (SIZE+1) && !read_payload){ /// - Read Payload size realloc sufficient memory for frame
 				
 			char* string = (char*)malloc(50*sizeof(char));
-			//sprintf(string, "CRC_Byte3=%d CRC_Byte2=%d CRC_Byte1=%d CRC_Byte3=%d \nData_Size=%d",*(recv_buffer),*(recv_buffer+1),*(recv_buffer+2),*(recv_buffer+3),*(recv_buffer+4));
+
 			sprintf(string, "<< CRC=%lx  \n<< PAYLOAD_SIZE=%d",*((uint32_t*)pCRC(recv_buffer)),*pSize(recv_buffer));
 			serialWriteStr(string);
 			free(string);
-				
-			//free(recv_buffer);
-			//bytes_recv = 0;
-			//preamble = false;
-				
-			//Reallocate Memory for recv_buffer based on payload size
-			//recv_buffer_size = 5+*(recv_buffer+4);
+
 			void * tmp = realloc(recv_buffer,frameSize(recv_buffer)*sizeof(uint8_t));
 			if(tmp !=NULL){
 				recv_buffer = tmp;
@@ -317,6 +252,7 @@ void recvDllFrame(){
 				preamble_recv = false;
 			}
 		}
+		/// Check for Destination and Source Address field of the frame
 		else if(bytes_recv == (SRC_ADDR+1) && bits_recv == 0){ /// - Check if Frame needs to be forwarded or not
 		
 			char* string = (char*)malloc(50*sizeof(char));
@@ -333,32 +269,31 @@ void recvDllFrame(){
 				serialWriteStr("<< SELF");
 			}
 		}
-		else if(read_payload && bytes_recv == frameSize(recv_buffer)){ /// - Process after reading the complete frame
+		/// Check for reading the complete frame
+		else if(read_payload && bytes_recv == frameSize(recv_buffer)){
 			serialWriteStr("<< RECV COMPLETE");
 			bytes_recv = 0;
 			bits_recv= 0;
 			read_payload = false;
 			preamble_recv = false;
-				
-				// ATOMIC_BLOCK(ATOMIC_RESTORESTATE){
+
+			/// - If frame need to be forwared add data to forward frame node
 			if(add_data_to_forward_frame){
 				uint8_t* forward_frame = (uint8_t*)malloc(frameSize(recv_buffer)*sizeof(uint8_t));
 				memcpy(forward_frame,recv_buffer,frameSize(recv_buffer));
 				add_data_to_forward_frame = false;
+				
 				serialWriteStr("<< ADDED FORWARD FRAME TO QUEUE");
 				if(dll_debug){printFrame(forward_frame);}
-				//addFrameToQueue(forward_frame);
+				
 				forward->frame = forward_frame;
-				if(dll_debug){
-					printFrame(forward->frame);
-				}
 				forward = NULL;
 			}
-			// else{
-			
+
+			/// - Validate CRC
 			uint8_t* crc_comp = (uint8_t*)malloc(4*sizeof(uint8_t));						
 			crc32(crc_comp,pPayload(recv_buffer),*pSize(recv_buffer));
-		
+			/// - If CRC matches copy frame from receive buffer to received frame, else discar frame
 			if(*((uint32_t*)crc_comp) == *((uint32_t*)pCRC(recv_buffer))){
 			
 				if(received_frame != NULL){
@@ -371,10 +306,10 @@ void recvDllFrame(){
 			else{
 				serialWriteStr("CRC Mismatch packet discarded !");
 				if(dll_debug){
-				printFrame(recv_buffer);
+					printFrame(recv_buffer);
 				}
 			}
-			//}
+			
 			free(recv_buffer);
 			recv_buffer = NULL;
 		}
@@ -391,16 +326,17 @@ uint8_t* getRecvFrame(){
 	if(received_frame == NULL){
 		return NULL;
 	}
-	
-	
 	uint8_t* frame = (uint8_t*)malloc(frameSize(received_frame)*sizeof(uint8_t));
 	memcpy(frame,received_frame,frameSize(received_frame)); /// - Make a copy of the `received_frame`
 	
 	free(received_frame);/// - Clear the `received_frame` buffer
 	received_frame = NULL;
+
 	return frame; ///@return pointer to the copy of received frame 
 }
-
+/**
+ * @brief Function set/unset `dll_debug`
+ */
 void setDllDebug(bool enable){
     dll_debug = enable;
 }
