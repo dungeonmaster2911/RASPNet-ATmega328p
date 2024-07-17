@@ -3,7 +3,4 @@
 *.hex
 *.elf
 
-./blink
-./serial
 
-RASPNet_Documentation/

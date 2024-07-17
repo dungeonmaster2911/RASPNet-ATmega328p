@@ -39,19 +39,20 @@ void controlBit(volatile uint8_t* reg,uint8_t pin,bool val){
 * @brief Creates a complete frame.
 * 
 * **Further Details**
+* Creates and allocates a new frame with suffcient memory
 */
 uint8_t* createFrame(uint8_t* payload, uint8_t payload_len){
         uint8_t* frame = (uint8_t*)malloc((PAYLOAD+payload_len)*sizeof(uint8_t));
         uint8_t* temp;
        
         temp = pPreamble(frame);
-        *temp = 0b01111110; /// - Add Preamble value to frame
+        *temp = 0b01111110; // Add Preamble value to frame
         
         temp = pIdentification(frame);
-        *temp = 0; /// - Add Identifaction value to frame
+        *temp = 0; // Add Identifaction value to frame
         
         temp = pFlags(frame);
-        *temp = 0; /// - Add flag value to frame
+        *temp = 0; // Add flag value to frame
         
         temp = pDestAddr(frame);
         *temp = 255;
@@ -59,7 +60,7 @@ uint8_t* createFrame(uint8_t* payload, uint8_t payload_len){
         temp = pSrcAddr(frame);
         *temp = 255;
         
-        return frame;
+        return frame;/// @return uint8_t* pointer to the created frame
 }
 
 /**

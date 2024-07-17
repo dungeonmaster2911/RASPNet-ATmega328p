@@ -6,7 +6,15 @@
 #include "../FrameQueue/Frame_Queue.h"
 #include "../Layer1/ISR_Clock_Data.h"
 
+/**
+* @file PiAtmegaAPI.c
+* @brief This file implements the API for communication between RPi and Atmega via UART.
+*/
 
+
+/**
+* @brief Function to check if any input is available from RPi
+*/
 void checkCmdFromPi(){
 	char* serial_str = serialReadStr();
 	if(serial_str){
@@ -15,6 +23,10 @@ void checkCmdFromPi(){
 	}
 }
 
+
+/**
+* @brief Function to parse the command received from RPi and execute further actions
+*/
 void parseCmdFromPi(const char* cmd_str){
 	
 	int read_int;
@@ -27,6 +39,7 @@ void parseCmdFromPi(const char* cmd_str){
 	
 	switch(*cmd_str){
 		case 'A':
+			/// - Change device address
 			sscanf(cmd_str,"A %d",&read_int);
 			if(read_int > 0 && read_int < 256){
 				
@@ -43,6 +56,7 @@ void parseCmdFromPi(const char* cmd_str){
 			}
 			break;
 		case 'D':
+			/// - Set Payload data
 			memset(data,0,strlen(data));
 			memcpy(data,(cmd_str+2),strlen((cmd_str+1)));
 			sprintf(string, "Payload: %s\nPayload Length: %d",data,strlen(data));
@@ -50,6 +64,7 @@ void parseCmdFromPi(const char* cmd_str){
 			payload_ready = true;
 			break;
 		case 'B':
+			/// - Set Destination address for payload
 			sscanf(cmd_str,"B %d",&read_int);
 			if(read_int >= 0 && read_int < 256 && read_int != getSelfAddr()){
 				dest_addr = read_int;
@@ -62,6 +77,7 @@ void parseCmdFromPi(const char* cmd_str){
 			}
 			break;
 		case 'P':
+			/// - Send the message 
 			if(payload_ready && dest_addr_ready){
 				sprintf(string, "Payload: %s\nPayload Length: %d",data,strlen(data));
 				serialWriteStr(string);
@@ -88,11 +104,12 @@ void parseCmdFromPi(const char* cmd_str){
 			
 			break;
 		case 'X':
-			/// Test cases !!!
+			/// - Send Test messages 
 			sscanf(cmd_str,"X %d",&read_int);
 			sendTestMsg((uint8_t)read_int);
 			break;
 		case 'V':
+			/// - Enable/Disable verbose logs 
 			sscanf(cmd_str,"V %d",&read_int);
 			if(read_int == 1){
 				setDllDebug(true);
@@ -104,6 +121,7 @@ void parseCmdFromPi(const char* cmd_str){
 			}
 			break;
 		case 'I':
+			/// - Enable/Disable RASPNet communication 
 			sscanf(cmd_str,"I %d",&read_int);
 			if(read_int == 1){
 				setCommEnable(true);
@@ -116,6 +134,7 @@ void parseCmdFromPi(const char* cmd_str){
 			break;
 			
 		default:
+			/// - Print Help information in case of invalid command 
 			serialWriteStr("No case match");
 			serialWriteStr("HELP \
 							\nSelf address value (1-255) --> A xx\
@@ -131,6 +150,10 @@ void parseCmdFromPi(const char* cmd_str){
 	free(string);
 }
 
+
+/**
+* @brief Function to send various test messages
+*/
 void sendTestMsg(uint8_t c){
 	
 	static char* pd = "casex";
@@ -173,7 +196,7 @@ void sendTestMsg(uint8_t c){
 			addFrameToQueue(frame);
 			break;
 		case 6:
-			///Case 6 -> Clear the frame queue
+			//Case 6 -> Clear the frame queue
 			serialWriteStr("CLEAR QUEUE !!!!");
 			createFrameQueue();
 			return;
