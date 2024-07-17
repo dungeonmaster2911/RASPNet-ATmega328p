@@ -69,3 +69,4 @@ make doc
   * Navigate to RASPNet_Documentation\html
   * Open index.html in any browser
 - Sample screenshots of the documentation 
+![Alt text](image.png)
