@@ -59,14 +59,6 @@ uint8_t* createFrame(uint8_t* payload, uint8_t payload_len){
         temp = pSrcAddr(frame);
         *temp = 255;
         
-        
-        crc32(pCRC(frame),payload,payload_len); /// - Add CRC value to frame
-        
-        *pSize(frame) = payload_len; /// - Add Payload length value to frame
-        //serialWriteStr("test");
-        //serialWriteStr((char*)payload);
-        memcpy(pPayload(frame),payload,payload_len); /// - Add Payload to frame
-
         return frame;
 }
 
@@ -122,8 +114,6 @@ void printFrame(uint8_t* frame){
         if(pPayload(frame)){
                 serialWriteStr("PAYLOAD");
                 for(int i=0;i<*pSize(frame);i++){
-                        //sprintf(string, "Data_BY_%d  CHAR = %c INT = %d",i,*(pPayload(frame)+i),*(pPayload(frame)+i));
-                        //serialWriteStr(string);
                         serialWrite(*(pPayload(frame)+i));
                 }
                 serialWrite('\n');    

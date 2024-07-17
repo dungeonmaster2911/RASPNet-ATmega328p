@@ -4,7 +4,7 @@
 */
 
 #include "RASPNetPinConfig.h"
-#include "Utils/UsrUtils.h"
+#include "../Utils/UsrUtils.h"
 
 /**
 *  @brief Setup I/O pins of the ATMEGA328p 

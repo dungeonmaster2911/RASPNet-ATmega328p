@@ -6,7 +6,7 @@
 #include <string.h>
 
 
-void addDllHeaders(uint8_t* frame,uint8_t* payload, uint8_t payload_len);
+void addDllHeaders(uint8_t* payload, uint8_t payload_len, uint8_t* frame);
 
 bool copyFrameToSendBuffer(uint8_t* dll_frame);
 

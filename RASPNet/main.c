@@ -12,7 +12,7 @@
 #include <util/atomic.h>
 
 
-#include "RASPNetPinConfig.h"
+#include "PinConfig/RASPNetPinConfig.h"
 #include "Utils/UsrUtils.h"
 #include "UART/UARTSetup.h"
 #include "Timer/TimerConfig.h"
@@ -21,9 +21,6 @@
 #include "FrameQueue/Frame_Queue.h"
 #include "PiAtmegaAPI/PiAtmegaAPI.h"
 #include "Layer1/ISR_Clock_Data.h"
-
-
-char* payload = "ABCD";
 
 
 
@@ -44,25 +41,7 @@ void handleRecveivedFrame(){
 			serialWriteStr("Frame discarded by Layer 3");
 		}
 	}
-	
-	
-
-	/*
-	if(recv_frame !=NULL){
-		printFrame(recv_frame);
-		free(recv_frame);
-		recv_frame = NULL;
-	}
-	*/
 		
-}
-
-void checkInput(){
-	char* serial_str = serialReadStr();
-	if(serial_str){
-		parseCmdFromPi(serial_str);
-		free(serial_str);
-	}
 }
 
 
@@ -77,7 +56,7 @@ int main(){
 	
 	
 	while(true){
-		checkInput();
+		checkCmdFromPi();
 		handleRecveivedFrame();
     }
 	return 0;

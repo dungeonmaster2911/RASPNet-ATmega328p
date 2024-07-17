@@ -6,6 +6,15 @@
 #include "../FrameQueue/Frame_Queue.h"
 #include "../Layer1/ISR_Clock_Data.h"
 
+
+void checkCmdFromPi(){
+	char* serial_str = serialReadStr();
+	if(serial_str){
+		parseCmdFromPi(serial_str);
+		free(serial_str);
+	}
+}
+
 void parseCmdFromPi(const char* cmd_str){
 	
 	int read_int;
@@ -61,6 +70,7 @@ void parseCmdFromPi(const char* cmd_str){
 				
 				uint8_t*frame = createFrame((uint8_t*)data,strlen(data));
 				addNetworkHeaders(dest_addr,getSelfAddr(),frame);
+				addDllHeaders((uint8_t*)data,strlen(data),frame);
 				addFrameToQueue(frame);
 				
 				memset(data,0,strlen(data));
@@ -131,34 +141,39 @@ void sendTestMsg(uint8_t c){
 			pd = "case1";
 			frame = createFrame((uint8_t*)pd,strlen(pd));
 			addNetworkHeaders(2,1,frame);
+			addDllHeaders((uint8_t*)pd,strlen(pd),frame);
 			addFrameToQueue(frame);
 			break;
 		case 2:
 		    pd = "case2";
 			frame = createFrame((uint8_t*)pd,strlen(pd));
 			addNetworkHeaders(1,2,frame);
+			addDllHeaders((uint8_t*)pd,strlen(pd),frame);
 			addFrameToQueue(frame);
 			break;
 		case 3:
 			pd = "case3";
 			frame = createFrame((uint8_t*)pd,strlen(pd));
 			addNetworkHeaders(0,1,frame);
+			addDllHeaders((uint8_t*)pd,strlen(pd),frame);
 			addFrameToQueue(frame);
 			break;
 		case 4:
 			pd = "case4";
 			frame = createFrame((uint8_t*)pd,strlen(pd));
 			addNetworkHeaders(5,6,frame);
+			addDllHeaders((uint8_t*)pd,strlen(pd),frame);
 			addFrameToQueue(frame);
 			break;
 		case 5:
 			pd = "case5";
 			frame = createFrame((uint8_t*)pd,strlen(pd));
 			addNetworkHeaders(0,6,frame);
+			addDllHeaders((uint8_t*)pd,strlen(pd),frame);
 			addFrameToQueue(frame);
 			break;
 		case 6:
-			// clear queue
+			///Case 6 -> Clear the frame queue
 			serialWriteStr("CLEAR QUEUE !!!!");
 			createFrameQueue();
 			return;
